@@ -1,0 +1,12 @@
+#+TITLE: 在 Emacs 中控制 Firefox
+
+* 简介
+* 功能
+* 安装
+* 感谢
+#emacs IRC 上的 average
+* 协议
+见同目录下的 LICENSE 文件
+* 版权
+(C) 2014 任文山 All rights reserved.
+renws1990 at gmail.com
