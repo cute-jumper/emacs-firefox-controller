@@ -28,15 +28,148 @@
 
 ;;; Installation:
 
-;; Place this program in your load path and add following code.
+;; This program depends on following programs:
+;;  - moz.el         / TODO link
+;;  - Firefox
+;;    - MozRepl      / TODO link
 
+;; Place this program in your load path and add the following code.
+;;
 ;; (require 'moz-controller)
 
 ;;; Usage:
 ;; TODO
 
 ;;; Code:
-;; TODO
+(require 'moz)
+
+(defgroup moz-controller nil
+  "Control Firefox from Emacs"
+  :group 'moz-controller)
+
+(defvar moz-controller-mode-map nil
+  "Keymap for controlling Firefox from Emacs.")
+
+(defvar moz-controller-mode-hook nil
+  "Hook to run upon entry into moz-controller-mode.")
+
+(defmacro defun-moz-controller-command (name arglist doc &rest body)
+  "Macro for defining moz commands.
+
+NAME: function name.
+ARGLIST: should be an empty list () .
+DOC: docstring for the function.
+BODY: the desired JavaScript expression, as a string."
+  `(defun ,name ,arglist
+     ,doc
+     (interactive)
+     (comint-send-string
+      (inferior-moz-process)
+      (car (quote ,body)))
+     )
+  )
+
+(defun-moz-controller-command moz-controller-page-refresh ()
+  "Refresh current page"
+  "setTimeout(function(){content.document.location.reload(true);}, '500');"
+  )
+
+(defun-moz-controller-command moz-controller-page-down ()
+  "Scroll down the current window by one page."
+  "content.window.scrollByPages(1);"
+  )
+
+(defun-moz-controller-command moz-controller-page-up ()
+  "Scroll up the current window by one page."
+  "content.window.scrollByPages(-1);"
+  )
+
+(defun-moz-controller-command moz-controller-tab-close ()
+  "Close current tab"
+  "content.window.close();"
+  )
+
+(defun-moz-controller-command moz-controller-zoom-in ()
+  "Zoom in"
+  "gBrowser.selectedBrowser.markupDocumentViewer.fullZoom += 0.1;"
+  )
+
+(defun-moz-controller-command moz-controller-zoom-out ()
+  "Zoom out"
+  "gBrowser.selectedBrowser.markupDocumentViewer.fullZoom -= 0.1;"
+  )
+
+(defun-moz-controller-command moz-controller-zoom-reset ()
+  "Zoom in"
+  "gBrowser.selectedBrowser.markupDocumentViewer.fullZoom = 1"
+  )
+
+(defun-moz-controller-command moz-controller-tab-previous ()
+  "Switch to the previous tab"
+  "getBrowser().mTabContainer.advanceSelectedTab(-1, true);"
+  )
+
+(defun-moz-controller-command moz-controller-tab-next ()
+  "Switch to the next tab"
+  "getBrowser().mTabContainer.advanceSelectedTab(1, true);"
+  )
+
+(unless moz-controller-mode-map
+  (setq moz-controller-mode-map
+        (let ((moz-controller-map (make-sparse-keymap)))
+          (define-key moz-controller-map (kbd "C-c m R") 'moz-controller-page-refresh)
+          (define-key moz-controller-map (kbd "C-c m n") 'moz-controller-page-down)
+          (define-key moz-controller-map (kbd "C-c m p") 'moz-controller-page-up)
+          (define-key moz-controller-map (kbd "C-c m k") 'moz-controller-tab-close)
+          (define-key moz-controller-map (kbd "C-c m b") 'moz-controller-tab-previous)
+          (define-key moz-controller-map (kbd "C-c m f") 'moz-controller-tab-next)
+          (define-key moz-controller-map (kbd "C-c m +") 'moz-controller-zoom-in)
+          (define-key moz-controller-map (kbd "C-c m -") 'moz-controller-zoom-out)
+          (define-key moz-controller-map (kbd "C-c m 0") 'moz-controller-zoom-reset)
+          moz-controller-map)))
+
+;;;###autoload
+(define-minor-mode moz-controller-mode
+  "Toggle moz-controller mode.
+With no argument, the mode is toggled on/off.
+Non-nil argument turns mode on.
+Nil argument turns mode off.
+
+Commands:
+\\{moz-controller-mode-map}
+
+Entry to this mode calls the value of `moz-controller-mode-hook'."
+
+  :init-value nil
+  :lighter " MozCtrl"
+  :group 'moz-controller
+  :keymap moz-controller-mode-map
+
+  (if moz-controller-mode
+      (run-mode-hooks 'moz-controller-mode-hook)))
+
+;;;###autoload
+(define-globalized-minor-mode moz-controller-global-mode
+  moz-controller-mode
+  moz-controller-on)
+
+(defun moz-controller-on ()
+  "Enable moz-controller minor mode."
+  (moz-controller-mode t))
+
+(defun moz-controller-off ()
+  "Disable moz-controller minor mode."
+  (moz-controller-mode nil))
+
+(defun moz-controller-global-on ()
+  "Enable moz-controller global minor mode."
+  (moz-controller-global-mode t)
+  )
+
+(defun moz-controller-global-off ()
+  "Disable moz-controller global minor mode."
+  (moz-controller-global-mode nil)
+  )
 
 (provide 'moz-controller)
 ;;; moz-controller.el ends here
