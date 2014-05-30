@@ -65,7 +65,7 @@ BODY: the desired JavaScript expression, as a string."
      (interactive)
      (comint-send-string
       (inferior-moz-process)
-      (car (quote ,body)))
+      ,@body)
      )
   )
 
