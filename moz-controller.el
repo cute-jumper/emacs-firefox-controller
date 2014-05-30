@@ -47,6 +47,11 @@
   "Control Firefox from Emacs"
   :group 'moz-controller)
 
+(defcustom moz-controller-zoom-step 0.1
+  "Zoom step, default to 0.1, it is supposed to be a positive number."
+  :group 'moz-controller
+  :type 'number)
+
 (defvar moz-controller-mode-map nil
   "Keymap for controlling Firefox from Emacs.")
 
@@ -91,12 +96,14 @@ BODY: the desired JavaScript expression, as a string."
 
 (defun-moz-controller-command moz-controller-zoom-in ()
   "Zoom in"
-  "gBrowser.selectedBrowser.markupDocumentViewer.fullZoom += 0.1;"
-  )
+  (concat "gBrowser.selectedBrowser.markupDocumentViewer.fullZoom += "
+          (number-to-string moz-controller-zoom-step) ";")
+ )
 
 (defun-moz-controller-command moz-controller-zoom-out ()
   "Zoom out"
-  "gBrowser.selectedBrowser.markupDocumentViewer.fullZoom -= 0.1;"
+  (concat "gBrowser.selectedBrowser.markupDocumentViewer.fullZoom -= "
+          (number-to-string moz-controller-zoom-step) ";")
   )
 
 (defun-moz-controller-command moz-controller-zoom-reset ()
