@@ -1,1 +1,72 @@
-#+TITLE: Control Firefox from Emacs
+#+TITLE: moz-controller: Control Firefox from Emacs
+
+It's annoying to switch between your text editor and your web browser constantly when you're hacking and reading web pages at the time. *moz-controller* allows you to control Firefox to scroll, refresh, zoom in, zoom out, close tabs and switch tabs without leaving Emacs.
+
+* Functions and Keybindings
+  | function               | name                        | keybinding |
+  |------------------------+-----------------------------+------------|
+  | refresh                | moz-controller-page-refresh | C-c m R    |
+  | scroll up              | moz-controller-page-down    | C-c m n    |
+  | scroll down            | moz-controller-page-up      | C-c m p    |
+  | close current tab      | moz-controller-tab-close    | C-c m k    |
+  | zoom in                | moz-controller-zoom-in      | C-c m b    |
+  | zoom out               | moz-controller-zoom-out     | C-c m f    |
+  | zoom reset             | moz-controller-zoom-reset   | C-c m +    |
+  | switch to previous tab | moz-controller-tab-previous | C-c m -    |
+  | switch to next tab     | moz-controller-tab-next     | C-c m 0    |
+
+
+* Installation
+** Firefox Plugin
+   Install [[https://addons.mozilla.org/en-US/firefox/addon/mozrepl/][MozRepl]] in Firefox.
+
+** Manual Installation
+   First install [[https://github.com/bard/mozrepl/wiki/Emacs-integration][moz.el]] in Emacs (you can install it via Emacs package systems such as el-get).
+
+   Then install moz-controller:
+
+   ~git clone git@github.com:RenWenshan/emacs-moz-controller.git~
+
+   and add the following code in your .emacs or init.el:
+
+   #+BEGIN_SRC emacs-lisp
+     (add-to-list 'load-path "/path/to/emacs-moz-controller")
+     (require 'moz-controller)
+   #+END_SRC
+
+** Package Installation
+   No yet.
+
+* Usage
+  After installation, press ~M-x moz-controller-mode~ to turn on/off moz-controller-mode in the current buffer.
+
+  Press ~M-x moz-controller-global-mode~ to turn on/off moz-controller-global-mode in all buffers, including future buffers.
+
+  To turn on moz-controller-mode globally by default, you can add ~(moz-controller-global-mode t)~ to your .emacs or init.el.
+
+* Define New Commands
+  I have a macro defined in moz-controller: ~defun-moz-controller-command~
+
+  You can use it to define new moz-controller commands, for example:
+
+  #+BEGIN_SRC emacs-lisp
+    (defun-moz-controller-command moz-controller-zoom-in ()
+      "Zoom in."
+      (concat "gBrowser.selectedBrowser.markupDocumentViewer.fullZoom += "
+              (number-to-string moz-controller-zoom-step) ";")
+      )
+  #+END_SRC
+
+  Where moz-controller-zoom-in is the function name, "Zoom in." is the docstring, (concat ...) is the command (in string format) you want *MozRepl* to execute.
+
+* Thanks
+  - *average* on #emacs IRC
+
+* License
+  See the LICENSE file.
+
+* Copyright
+  (C) 2014 任文山 (Ren Wenshan) All rights reserved.
+  renws1990 at gmail.com
+
+* Contributors
