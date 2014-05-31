@@ -2,19 +2,20 @@
 
 It's annoying to switch between your text editor and your web browser constantly when you're hacking and reading web pages at the time. *moz-controller* allows you to control Firefox to scroll, refresh, zoom in, zoom out, close tabs and switch tabs without leaving Emacs.
 
+[[http://youtu.be/gP-zpA4WteM][Video Demo]]
+
 * Functions and Keybindings
   | function               | name                        | keybinding |
   |------------------------+-----------------------------+------------|
   | refresh                | moz-controller-page-refresh | C-c m R    |
-  | scroll up              | moz-controller-page-down    | C-c m n    |
-  | scroll down            | moz-controller-page-up      | C-c m p    |
+  | scroll down            | moz-controller-page-down    | C-c m n    |
+  | scroll up              | moz-controller-page-up      | C-c m p    |
+  | zoom in                | moz-controller-zoom-in      | C-c m +    |
+  | zoom out               | moz-controller-zoom-out     | C-c m -    |
+  | zoom reset             | moz-controller-zoom-reset   | C-c m 0    |
+  | switch to previous tab | moz-controller-tab-previous | C-c m b    |
+  | switch to next tab     | moz-controller-tab-next     | C-c m f    |
   | close current tab      | moz-controller-tab-close    | C-c m k    |
-  | zoom in                | moz-controller-zoom-in      | C-c m b    |
-  | zoom out               | moz-controller-zoom-out     | C-c m f    |
-  | zoom reset             | moz-controller-zoom-reset   | C-c m +    |
-  | switch to previous tab | moz-controller-tab-previous | C-c m -    |
-  | switch to next tab     | moz-controller-tab-next     | C-c m 0    |
-
 
 * Installation
 ** Firefox Plugin

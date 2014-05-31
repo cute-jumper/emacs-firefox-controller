@@ -2,18 +2,20 @@
 
 边看网页(比如文档或教程)边写代码的时候, 需要不停地在文本编辑器和浏览器之间切换, 比较麻烦. *moz-controller* 可以让你在 Emacs 中控制 Firefox 进行翻页, 刷新, 缩放, 关闭标签页和切换标签页等操作.
 
+[[http://youtu.be/gP-zpA4WteM][视频演示]]
+
 * 功能和快捷键
   | 功能         | 命令                        | 快捷键  |
   |--------------+-----------------------------+---------|
   | 刷新         | moz-controller-page-refresh | C-c m R |
   | 向下翻页     | moz-controller-page-down    | C-c m n |
   | 向上翻页     | moz-controller-page-up      | C-c m p |
+  | 放大         | moz-controller-zoom-in      | C-c m + |
+  | 缩小         | moz-controller-zoom-out     | C-c m - |
+  | 复原         | moz-controller-zoom-reset   | C-c m 0 |
+  | 上一个标签页 | moz-controller-tab-previous | C-c m b |
+  | 下一个标签页 | moz-controller-tab-next     | C-c m f |
   | 关闭标签页   | moz-controller-tab-close    | C-c m k |
-  | 放大         | moz-controller-zoom-in      | C-c m b |
-  | 缩小         | moz-controller-zoom-out     | C-c m f |
-  | 复原         | moz-controller-zoom-reset   | C-c m + |
-  | 上一个标签页 | moz-controller-tab-previous | C-c m - |
-  | 下一个标签页 | moz-controller-tab-next     | C-c m 0 |
 
 * 安装
 ** Firefox 插件
