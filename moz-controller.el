@@ -3,9 +3,8 @@
 ;; Copyright (C) 2014 任文山 (Ren Wenshan)
 
 ;; Author: 任文山 (Ren Wenshan) <renws1990 at gmail.com>
-;; URL: https://github.com/renws/emacs-moz-controller
+;; URL: https://github.com/RenWenshan/emacs-moz-controller
 ;; Version: 0.0.1
-;; Keywords:
 
 ;; This program is free software; you can redistribute it and/or modify
 ;; it under the terms of the GNU General Public License as published by
@@ -26,19 +25,9 @@
 ;; to scroll up, scroll down, zoom in, zoom out, switch tabs, close current
 ;; tabs and etc.
 
-;;; Installation:
+;;; Installation: see the Installation section in the README.org
 
-;; This program depends on following programs:
-;;  - moz.el         / TODO link
-;;  - Firefox
-;;    - MozRepl      / TODO link
-
-;; Place this program in your load path and add the following code.
-;;
-;; (require 'moz-controller)
-
-;;; Usage:
-;; TODO
+;;; Usage: see the Usage section in the README.org
 
 ;;; Code:
 (require 'moz)
