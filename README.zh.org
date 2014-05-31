@@ -1,12 +1,75 @@
-#+TITLE: 在 Emacs 中控制 Firefox
+#+TITLE: moz-controller: 在 Emacs 中控制 Firefox
 
-* 简介
-* 功能
+边看网页(比如文档或教程)边写代码的时候, 需要不停地在文本编辑器和浏览器之间切换, 比较麻烦. *moz-controller* 可以让你在 Emacs 中控制 Firefox 进行翻页, 刷新, 缩放, 关闭标签页和切换标签页等操作.
+
+* 功能和快捷键
+  | 功能         | 命令                        | 快捷键  |
+  |--------------+-----------------------------+---------|
+  | 刷新         | moz-controller-page-refresh | C-c m R |
+  | 向下翻页     | moz-controller-page-down    | C-c m n |
+  | 向上翻页     | moz-controller-page-up      | C-c m p |
+  | 关闭标签页   | moz-controller-tab-close    | C-c m k |
+  | 放大         | moz-controller-zoom-in      | C-c m b |
+  | 缩小         | moz-controller-zoom-out     | C-c m f |
+  | 复原         | moz-controller-zoom-reset   | C-c m + |
+  | 上一个标签页 | moz-controller-tab-previous | C-c m - |
+  | 下一个标签页 | moz-controller-tab-next     | C-c m 0 |
+
 * 安装
+** Firefox 插件
+   在 Firefox 中安装 [[https://addons.mozilla.org/en-US/firefox/addon/mozrepl/][MozRepl]].
+
+** 手动安装
+   先在 Emacs 中安装 [[https://github.com/bard/mozrepl/wiki/Emacs-integration][moz.el]] (这个也可以通过 el-get 之类的 Emacs 扩展管理系统来安装)
+
+   然后安装 moz-controller:
+
+   ~git clone git@github.com:RenWenshan/emacs-moz-controller.git~
+
+   然后在你的 .emacs 或者 init.el 里加入:
+
+   #+BEGIN_SRC emacs-lisp
+     (add-to-list 'load-path "/path/to/emacs-moz-controller")
+     (require 'moz-controller)
+   #+END_SRC
+
+** 包管理系统安装
+   尚未加入包管理系统
+
+* 使用 moz-controller
+  安装 moz-controller 之后, 按 ~M-x moz-controller-mode~ 在当前 buffer 中开启/关闭 moz-controller-mode.
+
+  按 ~M-x moz-controller-global-mode~ 在所有 buffer 中(以及未来开启的 buffer 中) 开启/关闭 moz-controller-mode.
+
+  如果想默认在所有 buffer 中开启 moz-controller-mode, 可以在自己的 .emacs 或着 init.el 中加入:
+
+  #+BEGIN_SRC emacs-lisp
+    (moz-controller-global-mode t)
+  #+END_SRC
+
+* 定义新命令
+  moz-controller 里定义了一个 macro: ~defun-moz-controller-command~
+
+  你可以利用它定义自己需要的命令, 比如:
+
+  #+BEGIN_SRC emacs-lisp
+    (defun-moz-controller-command moz-controller-zoom-in ()
+      "Zoom in."
+      (concat "gBrowser.selectedBrowser.markupDocumentViewer.fullZoom += "
+              (number-to-string moz-controller-zoom-step) ";")
+      )
+  #+END_SRC
+
+  其中 moz-controller-zoom-in 是函数名, "Zoom in." 是命令的说明, (concat ...) 一句是要执行的命令, 是个字符串, 其包含的命令必须能在 *MozRepl* 中执行.
+
 * 感谢
-#emacs IRC 上的 average
+  #emacs IRC 上的 *average*
+
 * 协议
-见同目录下的 LICENSE 文件
+  见同目录下的 LICENSE 文件
+
 * 版权
-(C) 2014 任文山 All rights reserved.
-renws1990 at gmail.com
+  (C) 2014 任文山 (Ren Wenshan) All rights reserved.
+  renws1990 at gmail.com
+
+* 贡献者
