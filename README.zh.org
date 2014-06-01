@@ -65,7 +65,9 @@
   其中 moz-controller-zoom-in 是函数名, "Zoom in." 是命令的说明, (concat ...) 一句是要执行的命令, 是个字符串, 其包含的命令必须能在 *MozRepl* 中执行.
 
 * 感谢
-  #emacs IRC 上的 *average*
+  - average (#emacs IRC)
+  - 陈斌 (https://github.com/redguardtoo)
+  - Steve Purcell (https://github.com/purcell)
 
 * 协议
   见同目录下的 LICENSE 文件
@@ -75,3 +77,4 @@
   renws1990 at gmail.com
 
 * 贡献者
+  - Steve Purcell (https://github.com/purcell)
