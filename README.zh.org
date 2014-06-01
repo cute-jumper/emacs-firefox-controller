@@ -36,7 +36,22 @@
    #+END_SRC
 
 ** 包管理系统安装
-   尚未加入包管理系统
+   moz-controller 可以从 [[https://github.com/milkypostman/melpa][melpa]] 安装:
+
+   - 确保 melpa 在 ~package-archives~ 这个 list 中:
+
+     #+BEGIN_SRC emacs-lisp
+       (require 'package)
+       (add-to-list 'package-archives
+                    '("melpa" . "http://melpa.milkbox.net/packages/") t)
+       (when (< emacs-major-version 24)
+         ;; For important compatibility libraries like cl-lib
+         (add-to-list 'package-archives '("gnu" . "http://elpa.gnu.org/packages/")))
+       (package-initialize)
+     #+END_SRC
+
+   - 按 ~M-x package-list-packages~ 获取 Emacs 插件列表.
+   - 找到 ~moz-controller~ 并安装.
 
 * 使用 moz-controller
   安装 moz-controller 之后, 按 ~M-x moz-controller-mode~ 在当前 buffer 中开启/关闭 moz-controller-mode.
