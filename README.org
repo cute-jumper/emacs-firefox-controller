@@ -36,7 +36,22 @@ It's annoying to switch between your text editor and your web browser constantly
    #+END_SRC
 
 ** Package Installation
-   No yet.
+   moz-controller is available on [[https://github.com/milkypostman/melpa][melpa]]:
+
+   - Make sure you have melpa in the ~package-archives~ list:
+
+     #+BEGIN_SRC emacs-lisp
+       (require 'package)
+       (add-to-list 'package-archives
+                    '("melpa" . "http://melpa.milkbox.net/packages/") t)
+       (when (< emacs-major-version 24)
+         ;; For important compatibility libraries like cl-lib
+         (add-to-list 'package-archives '("gnu" . "http://elpa.gnu.org/packages/")))
+       (package-initialize)
+     #+END_SRC
+
+   - Press ~M-x package-list-packages~ to get a list of Emacs extensions.
+   - Find ~moz-controller~ and install it from there.
 
 * Usage
   After installation, press ~M-x moz-controller-mode~ to turn on/off moz-controller-mode in the current buffer.
