@@ -111,6 +111,11 @@ BODY: the desired JavaScript expression, as a string."
   "getBrowser().mTabContainer.advanceSelectedTab(1, true);"
   )
 
+(defun-moz-controller-command moz-controller-view-page-source ()
+  "View current page source code."
+  "BrowserViewSourceOfDocument(gBrowser.contentDocument);"
+  )
+
 (unless moz-controller-mode-map
   (setq moz-controller-mode-map
         (let ((moz-controller-map (make-sparse-keymap)))
@@ -123,6 +128,7 @@ BODY: the desired JavaScript expression, as a string."
           (define-key moz-controller-map (kbd "C-c m +") 'moz-controller-zoom-in)
           (define-key moz-controller-map (kbd "C-c m -") 'moz-controller-zoom-out)
           (define-key moz-controller-map (kbd "C-c m 0") 'moz-controller-zoom-reset)
+          (define-key moz-controller-map (kbd "C-c m u") 'moz-controller-view-page-source)
           moz-controller-map)))
 
 ;;;###autoload

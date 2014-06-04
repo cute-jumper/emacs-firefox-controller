@@ -5,17 +5,18 @@ It's annoying to switch between your text editor and your web browser constantly
 [[http://youtu.be/gP-zpA4WteM][Video Demo]]
 
 * Functions and Keybindings
-  | function               | name                        | keybinding |
-  |------------------------+-----------------------------+------------|
-  | refresh                | moz-controller-page-refresh | C-c m R    |
-  | scroll down            | moz-controller-page-down    | C-c m n    |
-  | scroll up              | moz-controller-page-up      | C-c m p    |
-  | zoom in                | moz-controller-zoom-in      | C-c m +    |
-  | zoom out               | moz-controller-zoom-out     | C-c m -    |
-  | zoom reset             | moz-controller-zoom-reset   | C-c m 0    |
-  | switch to previous tab | moz-controller-tab-previous | C-c m b    |
-  | switch to next tab     | moz-controller-tab-next     | C-c m f    |
-  | close current tab      | moz-controller-tab-close    | C-c m k    |
+  | function               | name                            | keybinding |
+  |------------------------+---------------------------------+------------|
+  | refresh                | moz-controller-page-refresh     | C-c m R    |
+  | scroll down            | moz-controller-page-down        | C-c m n    |
+  | scroll up              | moz-controller-page-up          | C-c m p    |
+  | zoom in                | moz-controller-zoom-in          | C-c m +    |
+  | zoom out               | moz-controller-zoom-out         | C-c m -    |
+  | zoom reset             | moz-controller-zoom-reset       | C-c m 0    |
+  | switch to previous tab | moz-controller-tab-previous     | C-c m b    |
+  | switch to next tab     | moz-controller-tab-next         | C-c m f    |
+  | close current tab      | moz-controller-tab-close        | C-c m k    |
+  | view page source code  | moz-controller-view-page-source | C-c m u    |
 
 * Installation
 ** Firefox Plugin
