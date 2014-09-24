@@ -48,6 +48,29 @@
 (defvar moz-controller-mode-hook nil
   "Hook to run upon entry into moz-controller-mode.")
 
+(defvar moz-controller-repl-output ""
+  "Output from *MozRepl*.")
+
+(defun moz-controller-repl-filter (proc string)
+  "Filter function of *MozRepl*.
+
+It gets the useful output of *MozRepl*, store it in `moz-controller-repl-output` and `kill-ring`"
+  (when (buffer-live-p (process-buffer proc))
+    (unless (string= string "repl> ")   ; ignore empty output (page up, page down, etc)
+      (setq moz-controller-repl-output
+            (replace-regexp-in-string "\"\\(.+\\)\"\nrepl> " "\\1" string))
+      (kill-new moz-controller-repl-output) ; append to kill-ring
+      (message moz-controller-repl-output) ; show the copied content in echo area
+      )
+    (with-current-buffer (process-buffer proc)
+      (let ((moving (= (point) (process-mark proc))))
+        (save-excursion
+          ;; Insert the text, advancing the process marker.
+          (goto-char (process-mark proc))
+          (insert string)
+          (set-marker (process-mark proc) (point)))
+        (if moving (goto-char (process-mark proc)))))))
+
 (defmacro defun-moz-controller-command (name arglist doc &rest body)
   "Macro for defining moz commands.
 
@@ -116,6 +139,11 @@ BODY: the desired JavaScript expression, as a string."
   "BrowserViewSourceOfDocument(gBrowser.contentDocument);"
   )
 
+(defun-moz-controller-command moz-controller-get-current-url ()
+    "Get the current tab's URL and add to kill-ring."
+    "gBrowser.contentWindow.location.href"
+    )
+
 (unless moz-controller-mode-map
   (setq moz-controller-mode-map
         (let ((moz-controller-map (make-sparse-keymap)))
@@ -129,6 +157,7 @@ BODY: the desired JavaScript expression, as a string."
           (define-key moz-controller-map (kbd "C-c m -") 'moz-controller-zoom-out)
           (define-key moz-controller-map (kbd "C-c m 0") 'moz-controller-zoom-reset)
           (define-key moz-controller-map (kbd "C-c m u") 'moz-controller-view-page-source)
+          (define-key moz-controller-map (kbd "C-c m l") 'moz-controller-get-current-url)
           moz-controller-map)))
 
 ;;;###autoload
@@ -148,6 +177,9 @@ Entry to this mode calls the value of `moz-controller-mode-hook'."
   :group 'moz-controller
   :keymap moz-controller-mode-map
 
+  (if (get-buffer-process "*MozRepl*")
+      (set-process-filter (get-buffer-process "*MozRepl*") 'moz-controller-repl-filter)
+    (message "Please run *MozRepl* first."))
   (if moz-controller-mode
       (run-mode-hooks 'moz-controller-mode-hook)))
 

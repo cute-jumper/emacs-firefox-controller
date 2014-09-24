@@ -7,6 +7,7 @@
 * 功能和快捷键
   | 功能         | 命令                            | 快捷键  |
   |--------------+---------------------------------+---------|
+  | 获得当前地址 | moz-controller-get-current-url  | C-c m l |
   | 刷新         | moz-controller-page-refresh     | C-c m R |
   | 向下翻页     | moz-controller-page-down        | C-c m n |
   | 向上翻页     | moz-controller-page-up          | C-c m p |

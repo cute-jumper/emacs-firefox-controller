@@ -7,6 +7,7 @@ It's annoying to switch between your text editor and your web browser constantly
 * Functions and Keybindings
   | function               | name                            | keybinding |
   |------------------------+---------------------------------+------------|
+  | get current tab's url  | moz-controller-get-current-url  | C-c m l    |
   | refresh                | moz-controller-page-refresh     | C-c m R    |
   | scroll down            | moz-controller-page-down        | C-c m n    |
   | scroll up              | moz-controller-page-up          | C-c m p    |
