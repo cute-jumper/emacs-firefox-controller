@@ -59,8 +59,16 @@ It gets the useful output of *MozRepl*, store it in `moz-controller-repl-output`
     (unless (string= string "repl> ")   ; ignore empty output (page up, page down, etc)
       (setq moz-controller-repl-output
             (replace-regexp-in-string "\"\\(.+\\)\"\nrepl> " "\\1" string))
-      (kill-new moz-controller-repl-output) ; append to kill-ring
-      (message moz-controller-repl-output) ; show the copied content in echo area
+      (setq moz-controller-repl-output-tag
+            (replace-regexp-in-string "^\\(#moz-controller-.+#\\) .*" "\\1" moz-controller-repl-output))
+      (if (string= moz-controller-repl-output-tag "#moz-controller-get-current-url#")
+          (progn
+            (setq moz-controller-repl-output (replace-regexp-in-string
+                                              moz-controller-repl-output-tag
+                                              "" moz-controller-repl-output))
+            (message moz-controller-repl-output)
+            (kill-new moz-controller-repl-output) ; append to kill-ring
+            ))
       )
     (with-current-buffer (process-buffer proc)
       (let ((moving (= (point) (process-mark proc))))
@@ -141,7 +149,7 @@ BODY: the desired JavaScript expression, as a string."
 
 (defun-moz-controller-command moz-controller-get-current-url ()
     "Get the current tab's URL and add to kill-ring."
-    "gBrowser.contentWindow.location.href"
+    "'#moz-controller-get-current-url# ' + gBrowser.contentWindow.location.href;"
     )
 
 (unless moz-controller-mode-map
