@@ -186,8 +186,7 @@ Entry to this mode calls the value of `moz-controller-mode-hook'."
   :keymap moz-controller-mode-map
 
   (if (get-buffer-process "*MozRepl*")
-      (set-process-filter (get-buffer-process "*MozRepl*") 'moz-controller-repl-filter)
-    (message "Please run *MozRepl* first."))
+      (set-process-filter (get-buffer-process "*MozRepl*") 'moz-controller-repl-filter))
   (if moz-controller-mode
       (run-mode-hooks 'moz-controller-mode-hook)))
 
