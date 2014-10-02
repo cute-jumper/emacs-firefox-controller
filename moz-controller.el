@@ -64,7 +64,7 @@ It gets the useful output of *MozRepl*, store it in `moz-controller-repl-output`
       (if (string= moz-controller-repl-output-tag "#moz-controller-get-current-url#")
           (progn
             (setq moz-controller-repl-output (replace-regexp-in-string
-                                              moz-controller-repl-output-tag
+                                              (concat moz-controller-repl-output-tag " ")
                                               "" moz-controller-repl-output))
             (message moz-controller-repl-output)
             (kill-new moz-controller-repl-output) ; append to kill-ring
