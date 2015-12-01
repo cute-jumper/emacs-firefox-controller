@@ -51,6 +51,9 @@
 (defvar moz-controller-repl-output ""
   "Output from *MozRepl*.")
 
+(defvar moz-controller-repl-output-tag ""
+  "Output tag from *MozRepl*.")
+
 (defun moz-controller-repl-filter (proc string)
   "Filter function of *MozRepl*.
 
