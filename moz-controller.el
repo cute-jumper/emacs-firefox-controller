@@ -188,8 +188,7 @@ Entry to this mode calls the value of `moz-controller-mode-hook'."
   :group 'moz-controller
   :keymap moz-controller-mode-map
 
-  (if (get-buffer-process "*MozRepl*")
-      (set-process-filter (get-buffer-process "*MozRepl*") 'moz-controller-repl-filter))
+  (set-process-filter (inferior-moz-process) 'moz-controller-repl-filter)
   (if moz-controller-mode
       (run-mode-hooks 'moz-controller-mode-hook)))
 
