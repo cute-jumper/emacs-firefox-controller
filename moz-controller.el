@@ -149,6 +149,10 @@ COMMAND-TYPE: the type of the command that is used for output filtering."
   "Add new tab."
   "gBrowser.addTab();")
 
+(moz-controller-defun moz-controller-new-tab-and-switch
+  "Add new tab and switch to it."
+  "gBrowser.selectedTab = gBrowser.addTab();")
+
 (unless moz-controller-mode-map
   (setq moz-controller-mode-map
         (let ((moz-controller-map (make-sparse-keymap)))
