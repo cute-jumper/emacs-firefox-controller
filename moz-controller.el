@@ -167,6 +167,8 @@ COMMAND-TYPE: the type of the command that is used for output filtering."
           (define-key moz-controller-map (kbd "C-c m 0") 'moz-controller-zoom-reset)
           (define-key moz-controller-map (kbd "C-c m u") 'moz-controller-view-page-source)
           (define-key moz-controller-map (kbd "C-c m l") 'moz-controller-get-current-url)
+          (define-key moz-controller-map (kbd "C-c m t") 'moz-controller-new-tab-and-switch)
+          (define-key moz-controller-map (kbd "C-c m B") 'moz-controller-switch-tab)
           moz-controller-map)))
 
 ;;;###autoload
