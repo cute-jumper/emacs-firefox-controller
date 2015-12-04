@@ -157,6 +157,18 @@ COMMAND-TYPE: the type of the command that is used for output filtering."
   "Select all the content in the current page."
   "goDoCommand('cmd_selectAll')")
 
+(moz-controller-defun moz-controller-copy
+  "Copy."
+  "goDoCommand('cmd_copy');")
+
+(moz-controller-defun moz-controller-paste
+  "Paste."
+  "goDoCommand('cmd_paste');")
+
+(moz-controller-defun moz-controller-cut
+  "Cut."
+  "goDoCommand('cmd_cut');")
+
 (moz-controller-defun moz-controller-switch-tab
   "Switch the tab."
   "Array.prototype.map.call(gBrowser.tabs, function(tab) {return tab.label;}).join(\"\\n\");"
