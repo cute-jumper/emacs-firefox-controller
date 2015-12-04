@@ -51,109 +51,99 @@
 (defvar moz-controller-repl-output ""
   "Output from *MozRepl*.")
 
-(defvar moz-controller-repl-output-tag ""
-  "Output tag from *MozRepl*.")
+(defvar moz-controller-command-type nil
+  "The type of command that we send to *MozRepl*.")
 
-(defun moz-controller-repl-filter (proc string)
+(defun moz-controller-repl-filter (string)
   "Filter function of *MozRepl*.
 
 It gets the useful output of *MozRepl*, store it in `moz-controller-repl-output` and `kill-ring`"
-  (when (buffer-live-p (process-buffer proc))
-    (unless (string= string "repl> ")   ; ignore empty output (page up, page down, etc)
-      (setq moz-controller-repl-output
-            (replace-regexp-in-string "\"\\(.+\\)\"\nrepl> " "\\1" string))
-      (setq moz-controller-repl-output-tag
-            (replace-regexp-in-string "^\\(#moz-controller-.+#\\) .*" "\\1" moz-controller-repl-output))
-      (if (string= moz-controller-repl-output-tag "#moz-controller-get-current-url#")
-          (progn
-            (setq moz-controller-repl-output (replace-regexp-in-string
-                                              (concat moz-controller-repl-output-tag " ")
-                                              "" moz-controller-repl-output))
-            (message moz-controller-repl-output)
-            (kill-new moz-controller-repl-output) ; append to kill-ring
-            ))
-      )
-    (with-current-buffer (process-buffer proc)
-      (let ((moving (= (point) (process-mark proc))))
-        (save-excursion
-          ;; Insert the text, advancing the process marker.
-          (goto-char (process-mark proc))
-          (insert string)
-          (set-marker (process-mark proc) (point)))
-        (if moving (goto-char (process-mark proc)))))))
+  (unless (string= string "repl> ")   ; ignore empty output (page up, page down, etc)
+    (setq moz-controller-repl-output
+          (replace-regexp-in-string "\"\\(.+\\)\"\nrepl> " "\\1" string))
+    (cond ((eq moz-controller-command-type 'moz-controller-get-current-url-type)
+           (message moz-controller-repl-output)
+           ;; append to kill-ring
+           (kill-new moz-controller-repl-output))
+          ((eq moz-controller-command-type 'moz-controller-switch-tab-type)
+           (let* ((tab-titles (split-string moz-controller-repl-output "\n"))
+                  (selected-title
+                   (completing-read "Select tab: " tab-titles)))
+             (moz-controller-send
+              (format
+               "getBrowser().selectTabAtIndex(%s);"
+               (position selected-title tab-titles :test 'equal))))))))
 
-(defmacro defun-moz-controller-command (name arglist doc &rest body)
+(defun moz-controller-send (command &optional command-type)
+  "Set command type and send COMMAND to `inferior-moz-process'."
+  (setq moz-controller-command-type command-type)
+  (comint-simple-send (inferior-moz-process) command))
+
+(defmacro moz-controller-defun (name doc command &optional command-type)
   "Macro for defining moz commands.
 
 NAME: function name.
-ARGLIST: should be an empty list () .
 DOC: docstring for the function.
-BODY: the desired JavaScript expression, as a string."
-  `(defun ,name ,arglist
+COMMAND: the desired JavaScript expression, as a string.
+COMMAND-TYPE: the type of the command that is used for output filtering."
+  (declare (indent 1)
+           (doc-string 2))
+  `(defun ,name ()
      ,doc
      (interactive)
-     (comint-send-string
-      (inferior-moz-process)
-      ,@body)
-     )
-  )
+     (moz-controller-send ,command ,command-type)))
 
-(defun-moz-controller-command moz-controller-page-refresh ()
+(moz-controller-defun moz-controller-page-refresh
   "Refresh current page"
-  "setTimeout(function(){content.document.location.reload(true);}, '500');"
-  )
+  "setTimeout(function(){content.document.location.reload(true);}, '500');")
 
-(defun-moz-controller-command moz-controller-page-down ()
+(moz-controller-defun moz-controller-page-down
   "Scroll down the current window by one page."
-  "content.window.scrollByPages(1);"
-  )
+  "content.window.scrollByPages(1);")
 
-(defun-moz-controller-command moz-controller-page-up ()
+(moz-controller-defun moz-controller-page-up
   "Scroll up the current window by one page."
-  "content.window.scrollByPages(-1);"
-  )
+  "content.window.scrollByPages(-1);")
 
-(defun-moz-controller-command moz-controller-tab-close ()
-  "Close current tab"
-  "content.window.close();"
-  )
+(moz-controller-defun moz-controller-tab-close
+  "Close current tab."
+  "content.window.close();")
 
-(defun-moz-controller-command moz-controller-zoom-in ()
-  "Zoom in"
+(moz-controller-defun moz-controller-zoom-in
+  "Zoom in."
   (concat "gBrowser.selectedBrowser.markupDocumentViewer.fullZoom += "
-          (number-to-string moz-controller-zoom-step) ";")
- )
+          (number-to-string moz-controller-zoom-step) ";"))
 
-(defun-moz-controller-command moz-controller-zoom-out ()
-  "Zoom out"
+(moz-controller-defun moz-controller-zoom-out
+  "Zoom out."
   (concat "gBrowser.selectedBrowser.markupDocumentViewer.fullZoom -= "
-          (number-to-string moz-controller-zoom-step) ";")
-  )
+          (number-to-string moz-controller-zoom-step) ";"))
 
-(defun-moz-controller-command moz-controller-zoom-reset ()
-  "Zoom in"
-  "gBrowser.selectedBrowser.markupDocumentViewer.fullZoom = 1"
-  )
+(moz-controller-defun moz-controller-zoom-reset
+  "Zoom reset."
+  "gBrowser.selectedBrowser.markupDocumentViewer.fullZoom = 1")
 
-(defun-moz-controller-command moz-controller-tab-previous ()
-  "Switch to the previous tab"
-  "getBrowser().mTabContainer.advanceSelectedTab(-1, true);"
-  )
+(moz-controller-defun moz-controller-tab-previous
+  "Switch to the previous tab."
+  "getBrowser().mTabContainer.advanceSelectedTab(-1, true);")
 
-(defun-moz-controller-command moz-controller-tab-next ()
-  "Switch to the next tab"
-  "getBrowser().mTabContainer.advanceSelectedTab(1, true);"
-  )
+(moz-controller-defun moz-controller-tab-next
+  "Switch to the next tab."
+  "getBrowser().mTabContainer.advanceSelectedTab(1, true);")
 
-(defun-moz-controller-command moz-controller-view-page-source ()
+(moz-controller-defun moz-controller-view-page-source
   "View current page source code."
-  "BrowserViewSourceOfDocument(gBrowser.contentDocument);"
-  )
+  "BrowserViewSourceOfDocument(gBrowser.contentDocument);")
 
-(defun-moz-controller-command moz-controller-get-current-url ()
-    "Get the current tab's URL and add to kill-ring."
-    "'#moz-controller-get-current-url# ' + gBrowser.contentWindow.location.href;"
-    )
+(moz-controller-defun moz-controller-get-current-url
+  "Get the current tab's URL and add to `kill-ring'."
+  "gBrowser.contentWindow.location.href;"
+  'moz-controller-get-current-url-type)
+
+(moz-controller-defun moz-controller-switch-tab
+  "Switch the tab."
+  "Array.prototype.map.call(getBrowser().tabs, function(tab) {return tab.label;}).join(\"\\n\");"
+  'moz-controller-switch-tab-type)
 
 (unless moz-controller-mode-map
   (setq moz-controller-mode-map
@@ -188,7 +178,11 @@ Entry to this mode calls the value of `moz-controller-mode-hook'."
   :group 'moz-controller
   :keymap moz-controller-mode-map
 
-  (set-process-filter (inferior-moz-process) 'moz-controller-repl-filter)
+  (let ((mode moz-controller-mode))
+    (with-current-buffer (process-buffer (inferior-moz-process))
+      (if mode
+          (add-hook 'comint-output-filter-functions #'moz-controller-repl-filter nil t)
+        (remove-hook 'comint-output-filter-functions #'moz-controller-repl-filter t))))
   (if moz-controller-mode
       (run-mode-hooks 'moz-controller-mode-hook)))
 
@@ -207,13 +201,11 @@ Entry to this mode calls the value of `moz-controller-mode-hook'."
 
 (defun moz-controller-global-on ()
   "Enable moz-controller global minor mode."
-  (moz-controller-global-mode t)
-  )
+  (moz-controller-global-mode t))
 
 (defun moz-controller-global-off ()
   "Disable moz-controller global minor mode."
-  (moz-controller-global-mode nil)
-  )
+  (moz-controller-global-mode nil))
 
 (provide 'moz-controller)
 ;;; moz-controller.el ends here
