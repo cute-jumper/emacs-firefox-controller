@@ -153,6 +153,10 @@ COMMAND-TYPE: the type of the command that is used for output filtering."
   "gBrowser.contentWindow.location.href;"
   'moz-controller-get-current-url-type)
 
+(moz-controller-defun moz-controller-select-all
+  "Select all the content in the current page."
+  "goDoCommand('cmd_selectAll')")
+
 (moz-controller-defun moz-controller-switch-tab
   "Switch the tab."
   "Array.prototype.map.call(gBrowser.tabs, function(tab) {return tab.label;}).join(\"\\n\");"
