@@ -187,9 +187,23 @@ COMMAND-TYPE: the type of the command that is used for output filtering."
   "Add new tab and switch to it."
   "gBrowser.selectedTab = gBrowser.addTab();")
 
+(moz-controller-defun moz-controller-startpage
+  "Goto start page."
+  "gBrowser.loadURI('about:home')")
+
 (moz-controller-defun moz-controller-goto-url
   "Goto URL."
   (format "gBrowser.loadURI(\"http://%s\");" (read-string "Goto: http://")))
+
+;; (defun moz-controller-edit ()
+;;   (interactive)
+;;   (moz-controller-send "a=Array.prototype.concat.call(Array.prototype.slice.call(content.document.getElementsByTagName('input')).filter(function(i){return (i.type == \"text\" || i.type == \"password\");}), Array.prototype.slice.call(content.document.getElementsByTagName('textarea')));i=-1;")
+;;   (moz-controller-send "if (i != -1) a[i].style.backgroundColor=b;\
+;; i=(i+1)%a.length;\
+;; b=a[i].style.backgroundColor;\
+;; a[i].style.backgroundColor='yellow';\
+;; a[i].focus();")
+;;   (moz-controller-send (format "a[i].value='%s';" (read-string "Input: "))))
 
 (unless moz-controller-mode-map
   (setq moz-controller-mode-map
