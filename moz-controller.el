@@ -145,6 +145,10 @@ COMMAND-TYPE: the type of the command that is used for output filtering."
   "Array.prototype.map.call(getBrowser().tabs, function(tab) {return tab.label;}).join(\"\\n\");"
   'moz-controller-switch-tab-type)
 
+(moz-controller-defun moz-controller-new-tab
+  "Add new tab."
+  "gBrowser.addTab();")
+
 (unless moz-controller-mode-map
   (setq moz-controller-mode-map
         (let ((moz-controller-map (make-sparse-keymap)))
