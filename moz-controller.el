@@ -203,6 +203,18 @@ COMMAND-TYPE: the type of the command that is used for output filtering."
   "Back."
   "gBrowser.goBack();")
 
+(moz-controller-defun moz-controller-maximize-window
+  "Maximize window."
+  "maximize();")
+
+(moz-controller-defun moz-controller-minimize-window
+  "Minimize window."
+  "minimize();")
+
+(moz-controller-defun moz-controller-restore-window
+  "Restore window."
+  "restore();")
+
 ;; (defun moz-controller-edit ()
 ;;   (interactive)
 ;;   (moz-controller-send "a=Array.prototype.concat.call(Array.prototype.slice.call(content.document.getElementsByTagName('input')).filter(function(i){return (i.type == \"text\" || i.type == \"password\");}), Array.prototype.slice.call(content.document.getElementsByTagName('textarea')));i=-1;")
