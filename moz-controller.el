@@ -105,6 +105,14 @@ COMMAND-TYPE: the type of the command that is used for output filtering."
   "Scroll up the current window by one page."
   "content.window.scrollByPages(-1);")
 
+(moz-controller-defun moz-controller-page-top
+  "Move to the top of the page."
+  "goDoCommand(\"cmd_moveTop\");")
+
+(moz-controller-defun moz-controller-page-bottom
+  "Move to the bottom of the page."
+  "goDoCommand(\"cmd_moveBottom\");")
+
 (moz-controller-defun moz-controller-tab-close
   "Close current tab."
   "content.window.close();")
@@ -159,6 +167,8 @@ COMMAND-TYPE: the type of the command that is used for output filtering."
           (define-key moz-controller-map (kbd "C-c m R") 'moz-controller-page-refresh)
           (define-key moz-controller-map (kbd "C-c m n") 'moz-controller-page-down)
           (define-key moz-controller-map (kbd "C-c m p") 'moz-controller-page-up)
+          (define-key moz-controller-map (kbd "C-c m <") 'moz-controller-page-top)
+          (define-key moz-controller-map (kbd "C-c m >") 'moz-controller-page-bottom)
           (define-key moz-controller-map (kbd "C-c m k") 'moz-controller-tab-close)
           (define-key moz-controller-map (kbd "C-c m b") 'moz-controller-tab-previous)
           (define-key moz-controller-map (kbd "C-c m f") 'moz-controller-tab-next)
