@@ -54,13 +54,13 @@
 (defvar moz-controller-command-type nil
   "The type of command that we send to *MozRepl*.")
 
-(defun moz-controller-repl-filter (string)
+(defun moz-controller-repl-filter (output)
   "Filter function of *MozRepl*.
 
 It gets the useful output of *MozRepl*, store it in `moz-controller-repl-output` and `kill-ring`"
-  (unless (string= string "repl> ")   ; ignore empty output (page up, page down, etc)
+  (unless (string= output "repl> ")   ; ignore empty output (page up, page down, etc)
     (setq moz-controller-repl-output
-          (replace-regexp-in-string "\"\\(\\(.*\n?\\)*\\)\"\nrepl> " "\\1" string))
+          (replace-regexp-in-string "\"\\(\\(.*\n?\\)*\\)\"\nrepl> " "\\1" output))
     (cond ((eq moz-controller-command-type 'moz-controller-get-current-url-type)
            (message moz-controller-repl-output)
            ;; append to kill-ring
