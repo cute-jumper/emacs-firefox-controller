@@ -176,7 +176,7 @@ COMMAND-TYPE: the type of the command that is used for output filtering."
 
 (moz-controller-defun moz-controller-switch-tab-by-id
   "Switch the tab by id."
-  "i=0;t=Array.prototype.slice.call(gBrowser.tabs);t.map(function(tab){tab.label=\"[\" + (i++) + \"]\" + tab.label;})"
+  "i=0;t=Array.prototype.slice.call(gBrowser.tabs);t.map(function(tab){tab.label=\"[\" + (i++) + \"]\" + tab.label;});"
   'moz-controller-switch-tab-by-id-show-id)
 
 (moz-controller-defun moz-controller-new-tab
@@ -189,11 +189,19 @@ COMMAND-TYPE: the type of the command that is used for output filtering."
 
 (moz-controller-defun moz-controller-startpage
   "Goto start page."
-  "gBrowser.loadURI('about:home')")
+  "gBrowser.loadURI('about:home');")
 
 (moz-controller-defun moz-controller-goto-url
   "Goto URL."
   (format "gBrowser.loadURI(\"http://%s\");" (read-string "Goto: http://")))
+
+(moz-controller-defun moz-controller-go-forward
+  "Foward."
+  "gBrowser.goForward();")
+
+(moz-controller-defun moz-controller-go-back
+  "Back."
+  "gBrowser.goBack();")
 
 ;; (defun moz-controller-edit ()
 ;;   (interactive)
