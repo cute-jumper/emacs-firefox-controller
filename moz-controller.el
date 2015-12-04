@@ -60,7 +60,7 @@
 It gets the useful output of *MozRepl*, store it in `moz-controller-repl-output` and `kill-ring`"
   (unless (string= string "repl> ")   ; ignore empty output (page up, page down, etc)
     (setq moz-controller-repl-output
-          (replace-regexp-in-string "\"\\(.+\\)\"\nrepl> " "\\1" string))
+          (replace-regexp-in-string "\"\\(\\(.*\n?\\)*\\)\"\nrepl> " "\\1" string))
     (cond ((eq moz-controller-command-type 'moz-controller-get-current-url-type)
            (message moz-controller-repl-output)
            ;; append to kill-ring
@@ -71,7 +71,7 @@ It gets the useful output of *MozRepl*, store it in `moz-controller-repl-output`
                    (completing-read "Select tab: " tab-titles)))
              (moz-controller-send
               (format
-               "getBrowser().selectTabAtIndex(%s);"
+               "gBrowser.selectTabAtIndex(%s);"
                (position selected-title tab-titles :test 'equal))))))))
 
 (defun moz-controller-send (command &optional command-type)
@@ -125,11 +125,11 @@ COMMAND-TYPE: the type of the command that is used for output filtering."
 
 (moz-controller-defun moz-controller-tab-previous
   "Switch to the previous tab."
-  "getBrowser().mTabContainer.advanceSelectedTab(-1, true);")
+  "gBrowser.tabContainer.advanceSelectedTab(-1, true);")
 
 (moz-controller-defun moz-controller-tab-next
   "Switch to the next tab."
-  "getBrowser().mTabContainer.advanceSelectedTab(1, true);")
+  "gBrowser.tabContainer.advanceSelectedTab(1, true);")
 
 (moz-controller-defun moz-controller-view-page-source
   "View current page source code."
@@ -142,7 +142,7 @@ COMMAND-TYPE: the type of the command that is used for output filtering."
 
 (moz-controller-defun moz-controller-switch-tab
   "Switch the tab."
-  "Array.prototype.map.call(getBrowser().tabs, function(tab) {return tab.label;}).join(\"\\n\");"
+  "Array.prototype.map.call(gBrowser.tabs, function(tab) {return tab.label;}).join(\"\\n\");"
   'moz-controller-switch-tab-type)
 
 (moz-controller-defun moz-controller-new-tab
