@@ -77,7 +77,9 @@ It gets the useful output of *MozRepl*, store it in `moz-controller-repl-output`
            (moz-controller-send
             (format
              "t.map(function(tab){tab.label=tab.label.replace(/\[[0-9]+\]/, '');});gBrowser.selectTabAtIndex(%s);"
-             (read-string "Tab id: ")))))))
+             (read-string "Tab id: "))))
+          ((eq moz-controller-command-type 'moz-controller-search-start-type)
+           (moz-controller-search-edit)))))
 
 (defun moz-controller-send (command &optional command-type)
   "Set command type and send COMMAND to `inferior-moz-process'."
@@ -214,6 +216,50 @@ COMMAND-TYPE: the type of the command that is used for output filtering."
 (moz-controller-defun moz-controller-restore-window
   "Restore window."
   "restore();")
+
+(moz-controller-defun moz-controller-search-start
+  "Start search"
+  "gFindBar.open();"
+  'moz-controller-search-start-type)
+
+(defsubst moz-controller-search-help ()
+  (message "[n]: search forward; [p]: search backward; [e]: edit search string; any other keys quit search."))
+
+(moz-controller-defun moz-controller-search-edit
+  "Edit search string."
+  ;; FIXME
+  (let ((map (make-sparse-keymap))
+        (search-string
+         (progn (setq overriding-local-map)
+                (read-string "Search: "))))
+    (define-key map "n" #'moz-controller-search-next)
+    (define-key map "p" #'moz-controller-search-previous)
+    (define-key map "e" #'moz-controller-search-edit)
+    (define-key map [t] #'moz-controller-search-quit)
+    (add-hook 'mouse-leave-buffer-hook #'moz-controller-search-quit)
+    (add-hook 'kbd-macro-termination-hook #'moz-controller-search-quit)
+    (setq overriding-local-map map)
+    (moz-controller-search-help)
+    (format "gFindBar._findField.value='%s';" search-string)))
+
+(moz-controller-defun moz-controller-search-next
+  "Goto next search."
+  (progn (moz-controller-search-help)
+         "gFindBar.onFindAgainCommand(false);"))
+
+(moz-controller-defun moz-controller-search-previous
+  "Goto previous search."
+  (progn (moz-controller-search-help)
+         "gFindBar.onFindAgainCommand(true);"))
+
+(moz-controller-defun moz-controller-search-quit
+  "Quit search."
+  (progn
+    (setq overriding-local-map)
+    (remove-hook 'mouse-leave-buffer-hook #'moz-controller-search-quit)
+    (remove-hook 'kbd-macro-termination-hook #'moz-controller-search-quit)
+    (message "Quit moz search.")
+    "gFindBar.close();"))
 
 ;; (defun moz-controller-edit ()
 ;;   (interactive)
