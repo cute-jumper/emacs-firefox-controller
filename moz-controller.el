@@ -73,7 +73,7 @@ It gets the useful output of *MozRepl*, store it in `moz-controller-repl-output`
               (format
                "gBrowser.selectTabAtIndex(%s);"
                (position selected-title tab-titles :test 'equal)))))
-          ((eq moz-controller-command-type 'moz-controller-switch-tab-by-id-show-id)
+          ((eq moz-controller-command-type 'moz-controller-switch-tab-by-id-type)
            (moz-controller-send
             (format
              "t.map(function(tab){tab.label=tab.label.replace(/\[[0-9]+\]/, '');});gBrowser.selectTabAtIndex(%s);"
@@ -177,7 +177,7 @@ COMMAND-TYPE: the type of the command that is used for output filtering."
 (moz-controller-defun moz-controller-switch-tab-by-id
   "Switch the tab by id."
   "i=0;t=Array.prototype.slice.call(gBrowser.tabs);t.map(function(tab){tab.label=\"[\" + (i++) + \"]\" + tab.label;});"
-  'moz-controller-switch-tab-by-id-show-id)
+  'moz-controller-switch-tab-by-id-type)
 
 (moz-controller-defun moz-controller-new-tab
   "Add new tab."
