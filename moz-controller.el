@@ -104,6 +104,14 @@ COMMAND-TYPE: the type of the command that is used for output filtering."
   "Refresh current page"
   "setTimeout(function(){content.document.location.reload(true);}, '500');")
 
+(moz-controller-defun moz-controller-page-line-down
+  "Scroll down the current window by one line."
+  "goDoCommand('cmd_scrollLineDown');")
+
+(moz-controller-defun moz-controller-page-line-up
+  "Scroll up the current window by one line."
+  "goDoCommand('cmd_scrollLineUp');")
+
 (moz-controller-defun moz-controller-page-down
   "Scroll down the current window by one page."
   "content.window.scrollByPages(1);")
@@ -265,6 +273,8 @@ COMMAND-TYPE: the type of the command that is used for output filtering."
   (let ((map (make-sparse-keymap)))
     ;; page
     (define-key map "r" #'moz-controller-page-refresh)
+    (define-key map "j" #'moz-controller-page-line-down)
+    (define-key map "k" #'moz-controller-page-line-up)
     (define-key map "n" #'moz-controller-page-down)
     (define-key map "p" #'moz-controller-page-up)
     (define-key map "<" #'moz-controller-page-top)
@@ -325,18 +335,18 @@ COMMAND-TYPE: the type of the command that is used for output filtering."
   "Keymap of search in `moz-controller-remote-mode'.")
 
 (defvar moz-controller--generate-key-function-string
-  "function moz_controller_generate_key(target,is_ctrl,is_alt,is_shift,keycode,charcode){\
+  "function mozControllerGenerateKey(target,isCtrl,isAlt,isShift,keycode,charcode){\
 if (target==gURLBar.inputField && keycode == KeyEvent.DOM_VK_RETURN) {gBrowser.loadURI(target.value); content.window.focus(); return;}\
 else if (target == BrowserSearch.searchBar.textbox.inputField && keycode == KeyEvent.DOM_VK_RETURN) { BrowserSearch.searchBar.doSearch(target.value,'tab'); return;}\
 var evt=document.createEvent('KeyboardEvent');\
-evt.initKeyEvent('keypress',true,true,null,is_ctrl,is_alt,is_shift,false,keycode,charcode);\
+evt.initKeyEvent('keypress',true,true,null,isCtrl,isAlt,isShift,false,keycode,charcode);\
 target.dispatchEvent(evt);\
 }")
 
 (moz-send-string moz-controller--generate-key-function-string)
 
 (defun moz-controller-send-key (charcode &optional ctrlp altp shiftp keycode target)
-  (moz-controller-send (format "moz_controller_generate_key(%s,%s,%s,%s,%s,%s);"
+  (moz-controller-send (format "mozControllerGenerateKey(%s,%s,%s,%s,%s,%s);"
                                (or target "document.commandDispatcher.focusedElement || document")
                                (moz-controller-e2j ctrlp)
                                (moz-controller-e2j altp)
