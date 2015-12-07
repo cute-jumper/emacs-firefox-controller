@@ -261,6 +261,69 @@ COMMAND-TYPE: the type of the command that is used for output filtering."
     (message "Quit moz search.")
     "gFindBar.close();"))
 
+(defvar moz-controller--generate-key-function-string
+  "function moz_controller_generate_key(target,is_ctrl,is_alt,is_shift,keycode,charcode){\
+if (target==gURLBar.inputField && keycode == KeyEvent.DOM_VK_RETURN) {gBrowser.loadURI(target.value); content.window.focus(); return;}\
+else if (target == BrowserSearch.searchBar.textbox.inputField && keycode == KeyEvent.DOM_VK_RETURN) { BrowserSearch.searchBar.doSearch(target.value,'tab'); return;}\
+var evt=document.createEvent('KeyboardEvent');\
+evt.initKeyEvent('keypress',true,true,null,is_ctrl,is_alt,is_shift,false,keycode,charcode);\
+target.dispatchEvent(evt);\
+}")
+
+(moz-send-string moz-controller--generate-key-function-string)
+
+(defun moz-controller-send-key (charcode &optional ctrlp altp shiftp keycode target)
+  (moz-controller-send (format "moz_controller_generate_key(%s,%s,%s,%s,%s,%s);"
+                               (or target "document.commandDispatcher.focusedElement || document")
+                               (moz-controller-e2j ctrlp)
+                               (moz-controller-e2j altp)
+                               (moz-controller-e2j shiftp)
+                               (or keycode "0")
+                               charcode)))
+
+(defconst moz-controller-special-key-table
+  '((backspace . "BACK_SPACE")
+    (prior . "PAGE_UP")
+    (next . "PAGE_DOWN")
+    (print . "PRINTSCREEN")))
+
+(defun moz-controller-e2j (e)
+  (pcase e
+    ((pred booleanp) (if e "true" "false"))
+    ((pred symbolp) (format "KeyEvent.DOM_VK_%s"
+                            (or (assoc-default e moz-controller-special-key-table)
+                                (upcase (symbol-name e)))))
+    (_ 0)))
+
+(moz-controller-send-key ?e)
+(moz-controller-send-key 0 nil nil nil "KeyEvent.DOM_VK_BACK_SPACE")
+(moz-controller-send-key ?v nil t)
+(moz-controller-send-key 0 nil nil nil "KeyEvent.DOM_VK_RETURN")
+
+(defun foo ()
+  (catch 'break
+    (let (evt mods c)
+      (while t
+        (setq evt (read-event))
+        (setq mods (event-modifiers evt))
+        (setq c (event-basic-type evt))
+        (message "%s: %s" mods c)
+        (and (characterp c)
+             (char-equal c ?q)
+             (not mods)
+             (throw 'break nil))
+        (moz-controller-send-key (if (characterp c) c 0)
+                                 (and (member 'control mods) t)
+                                 (and (member 'meta mods) t)
+                                 (and (member 'shift mods) t)
+                                 (moz-controller-e2j c))))))
+
+(defun debug ()
+  (message "%s: %s" (event-modifiers last-input-event)
+           (event-basic-type last-input-event)))
+(add-hook 'post-command-hook 'debug)
+(remove-hook 'post-command-hook 'debug)
+
 ;; (defun moz-controller-edit ()
 ;;   (interactive)
 ;;   (moz-controller-send "a=Array.prototype.concat.call(Array.prototype.slice.call(content.document.getElementsByTagName('input')).filter(function(i){return (i.type == \"text\" || i.type == \"password\");}), Array.prototype.slice.call(content.document.getElementsByTagName('textarea')));i=-1;")
