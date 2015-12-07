@@ -376,6 +376,7 @@ target.dispatchEvent(evt);\
 (defvar moz-controller-direct-mode-map
   (let ((map (make-sparse-keymap)))
     (define-key map (kbd "C-g") #'moz-controller-direct-mode-quit)
+    (define-key map (kbd "C-G") #'moz-controller-highlight-focus)
     (define-key map (kbd "C-z") #'moz-controller-switch-to-remote-mode)
     (define-key map [t] #'moz-controller-direct-mode-send-key)
     map)
@@ -388,6 +389,14 @@ target.dispatchEvent(evt);\
   (interactive)
   ;;TODO
   )
+
+(moz-controller-defun moz-controller-highlight-focus
+  "Highlight the focused element."
+  "(function(){if (document.commandDispatcher.focusedElement) {\
+var originalColor=document.commandDispatcher.focusedElement.style.backgroundColor;\
+document.commandDispatcher.focusedElement.style.backgroundColor='yellow';\
+setTimeout(function(){document.commandDispatcher.focusedElement.style.backgroundColor=originalColor;},1000);\
+}})();")
 
 (defun moz-controller-direct-mode-quit ()
   (interactive)
