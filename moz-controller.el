@@ -300,23 +300,35 @@ target.dispatchEvent(evt);\
 (moz-controller-send-key ?v nil t)
 (moz-controller-send-key 0 nil nil nil "KeyEvent.DOM_VK_RETURN")
 
-(defun foo ()
-  (catch 'break
-    (let (evt mods c)
-      (while t
-        (setq evt (read-event))
-        (setq mods (event-modifiers evt))
-        (setq c (event-basic-type evt))
-        (message "%s: %s" mods c)
-        (and (characterp c)
-             (char-equal c ?q)
-             (not mods)
-             (throw 'break nil))
-        (moz-controller-send-key (if (characterp c) c 0)
-                                 (and (member 'control mods) t)
-                                 (and (member 'meta mods) t)
-                                 (and (member 'shift mods) t)
-                                 (moz-controller-e2j c))))))
+(defun moz-controller-direct-mode ()
+  (let ((map (make-sparse-keymap)))
+    (define-key map (kbd "C-g") #'moz-controller-direct-mode-quit)
+    (define-key map [t] #'moz-controller-direct-mode-send-key)
+    (setq overriding-local-map map)))
+
+(defun moz-controller-direct-mode-quit ()
+  (interactive)
+  (if (eq last-command 'moz-controller-direct-mode-quit)
+      (progn
+        (setq overriding-local-map)
+        (message "Exit moz-controller-direct-mode."))
+    (moz-send-string "content.window.focus();")
+    (message "Move focus to firefox content window.
+Press C-g again to exit moz-controller-direct-mode.")))
+
+(defun moz-controller-direct-mode-send-key ()
+  (interactive)
+  (let* ((evt last-input-event)
+         (mods (event-modifiers evt))
+         (c (event-basic-type evt)))
+    (message (concat "Key sent to firefox: "
+                     (if mods (format "%s " mods) "")
+                     (format (if (characterp c) "%c" "%s") c)))
+    (moz-controller-send-key (if (characterp c) c 0)
+                             (and (member 'control mods) t)
+                             (and (member 'meta mods) t)
+                             (and (member 'shift mods) t)
+                             (moz-controller-e2j c))))
 
 (defun debug ()
   (message "%s: %s" (event-modifiers last-input-event)
