@@ -261,6 +261,69 @@ COMMAND-TYPE: the type of the command that is used for output filtering."
     (message "Quit moz search.")
     "gFindBar.close();"))
 
+(defvar moz-controller-remote-mode-map
+  (let ((map (make-sparse-keymap)))
+    ;; page
+    (define-key map "r" #'moz-controller-page-refresh)
+    (define-key map "n" #'moz-controller-page-down)
+    (define-key map "p" #'moz-controller-page-up)
+    (define-key map "<" #'moz-controller-page-top)
+    (define-key map ">" #'moz-controller-page-bottom)
+    ;; zoom
+    (define-key map "+" #'moz-controller-zoom-in)
+    (define-key map "-" #'moz-controller-zoom-out)
+    (define-key map "0" #'moz-controller-zoom-reset)
+    ;; tab
+    (define-key map "k" #'moz-controller-tab-close)
+    (define-key map "h" #'moz-controller-tab-previous)
+    (define-key map "l" #'moz-controller-tab-next)
+    (define-key map "t" #'moz-controller-new-tab-and-switch)
+    (define-key map "T" #'moz-controller-new-tab)
+    (define-key map "b" #'moz-controller-switch-tab)
+    (define-key map "B" #'moz-controller-switch-tab-by-id)
+    ;; navigation
+    (define-key map "L" #'moz-controller-get-current-url)
+    (define-key map "H" #'moz-controller-startpage)
+    (define-key map "g" #'moz-controller-goto-url)
+    (define-key map "f" #'moz-controller-go-forward)
+    (define-key map "b" #'moz-controller-go-back)
+    ;; select, cut, copy & paste
+    (define-key map "a" #'moz-controller-select-all)
+    (define-key map "x" #'moz-controller-cut)
+    (define-key map "c" #'moz-controller-copy)
+    (define-key map "v" #'moz-controller-paste)
+    ;; window management
+    (define-key map "^" #'moz-controller-maximize-window)
+    (define-key map "&" #'moz-controller-restore-window)
+    (define-key map "*" #'moz-controller-minimize-window)
+    ;; search
+    (define-key map "s" #'moz-controller-search-start)
+    ;; switch to direct mode
+    (define-key map (kbd "C-z") #'moz-controller-switch-to-direct-mode)
+    ;; exit
+    (define-key map "q" #'moz-controller-remote-mode-quit)
+    map)
+  "Keymap of `moz-controller-remote-mode'.")
+
+(defun moz-controller-remote-mode-quit ()
+  (interactive)
+  ;;TODO
+  )
+
+(defun moz-controller-switch-to-direct-mode ()
+  (interactive)
+  ;;TODO
+  )
+
+(defvar moz-controller-remote-mode-search-map
+  (let ((map (make-sparse-keymap)))
+    (define-key map "n" #'moz-controller-search-next)
+    (define-key map "p" #'moz-controller-search-previous)
+    (define-key map "e" #'moz-controller-search-edit)
+    (define-key map [t] #'moz-controller-search-quit)
+    map)
+  "Keymap of search in `moz-controller-remote-mode'.")
+
 (defvar moz-controller--generate-key-function-string
   "function moz_controller_generate_key(target,is_ctrl,is_alt,is_shift,keycode,charcode){\
 if (target==gURLBar.inputField && keycode == KeyEvent.DOM_VK_RETURN) {gBrowser.loadURI(target.value); content.window.focus(); return;}\
@@ -300,11 +363,21 @@ target.dispatchEvent(evt);\
 (moz-controller-send-key ?v nil t)
 (moz-controller-send-key 0 nil nil nil "KeyEvent.DOM_VK_RETURN")
 
-(defun moz-controller-direct-mode ()
+(defvar moz-controller-direct-mode-map
   (let ((map (make-sparse-keymap)))
     (define-key map (kbd "C-g") #'moz-controller-direct-mode-quit)
+    (define-key map (kbd "C-z") #'moz-controller-switch-to-remote-mode)
     (define-key map [t] #'moz-controller-direct-mode-send-key)
-    (setq overriding-local-map map)))
+    map)
+  "Keymap of `moz-controller-direct-mode'.")
+
+(defun moz-controller-direct-mode ()
+  (setq overriding-local-map map))
+
+(defun moz-controller-switch-to-remote-mode ()
+  (interactive)
+  ;;TODO
+  )
 
 (defun moz-controller-direct-mode-quit ()
   (interactive)
@@ -346,26 +419,7 @@ Press C-g again to exit moz-controller-direct-mode.")))
 ;; a[i].focus();")
 ;;   (moz-controller-send (format "a[i].value='%s';" (read-string "Input: "))))
 
-(unless moz-controller-mode-map
-  (setq moz-controller-mode-map
-        (let ((moz-controller-map (make-sparse-keymap)))
-          (define-key moz-controller-map (kbd "C-c m R") 'moz-controller-page-refresh)
-          (define-key moz-controller-map (kbd "C-c m n") 'moz-controller-page-down)
-          (define-key moz-controller-map (kbd "C-c m p") 'moz-controller-page-up)
-          (define-key moz-controller-map (kbd "C-c m <") 'moz-controller-page-top)
-          (define-key moz-controller-map (kbd "C-c m >") 'moz-controller-page-bottom)
-          (define-key moz-controller-map (kbd "C-c m k") 'moz-controller-tab-close)
-          (define-key moz-controller-map (kbd "C-c m b") 'moz-controller-tab-previous)
-          (define-key moz-controller-map (kbd "C-c m f") 'moz-controller-tab-next)
-          (define-key moz-controller-map (kbd "C-c m +") 'moz-controller-zoom-in)
-          (define-key moz-controller-map (kbd "C-c m -") 'moz-controller-zoom-out)
-          (define-key moz-controller-map (kbd "C-c m 0") 'moz-controller-zoom-reset)
-          (define-key moz-controller-map (kbd "C-c m u") 'moz-controller-view-page-source)
-          (define-key moz-controller-map (kbd "C-c m l") 'moz-controller-get-current-url)
-          (define-key moz-controller-map (kbd "C-c m t") 'moz-controller-new-tab-and-switch)
-          (define-key moz-controller-map (kbd "C-c m B") 'moz-controller-switch-tab)
-          moz-controller-map)))
-
+;;TODO REMOVE THIS PLEASE
 ;;;###autoload
 (define-minor-mode moz-controller-mode
   "Toggle moz-controller mode.
