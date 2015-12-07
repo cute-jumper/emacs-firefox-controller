@@ -283,7 +283,7 @@ Array.prototype.slice.call(gBrowser.tabs).map(function(tab){tab.label=\"[\" + (i
     (define-key map "-" #'moz-controller-zoom-out)
     (define-key map "0" #'moz-controller-zoom-reset)
     ;; tab
-    (define-key map "k" #'moz-controller-tab-close)
+    (define-key map "x" #'moz-controller-tab-close)
     (define-key map "h" #'moz-controller-tab-previous)
     (define-key map "l" #'moz-controller-tab-next)
     (define-key map "t" #'moz-controller-new-tab-and-switch)
@@ -298,9 +298,9 @@ Array.prototype.slice.call(gBrowser.tabs).map(function(tab){tab.label=\"[\" + (i
     (define-key map "b" #'moz-controller-go-back)
     ;; select, cut, copy & paste
     (define-key map "a" #'moz-controller-select-all)
-    (define-key map "x" #'moz-controller-cut)
-    (define-key map "c" #'moz-controller-copy)
-    (define-key map "v" #'moz-controller-paste)
+    (define-key map "W" #'moz-controller-cut)
+    (define-key map "w" #'moz-controller-copy)
+    (define-key map "y" #'moz-controller-paste)
     ;; window management
     (define-key map "^" #'moz-controller-maximize-window)
     (define-key map "&" #'moz-controller-restore-window)
