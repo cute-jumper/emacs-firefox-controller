@@ -42,12 +42,6 @@
   :group 'moz-controller
   :type 'number)
 
-(defvar moz-controller-mode-map nil
-  "Keymap for controlling Firefox from Emacs.")
-
-(defvar moz-controller-mode-hook nil
-  "Hook to run upon entry into moz-controller-mode.")
-
 (defvar moz-controller-repl-output ""
   "Output from *MozRepl*.")
 
@@ -463,27 +457,6 @@ Entry to this mode calls the value of `moz-controller-mode-hook'."
         (remove-hook 'comint-output-filter-functions #'moz-controller-repl-filter t))))
   (if moz-controller-mode
       (run-mode-hooks 'moz-controller-mode-hook)))
-
-;;;###autoload
-(define-globalized-minor-mode moz-controller-global-mode
-  moz-controller-mode
-  moz-controller-on)
-
-(defun moz-controller-on ()
-  "Enable moz-controller minor mode."
-  (moz-controller-mode t))
-
-(defun moz-controller-off ()
-  "Disable moz-controller minor mode."
-  (moz-controller-mode nil))
-
-(defun moz-controller-global-on ()
-  "Enable moz-controller global minor mode."
-  (moz-controller-global-mode t))
-
-(defun moz-controller-global-off ()
-  "Disable moz-controller global minor mode."
-  (moz-controller-global-mode nil))
 
 (provide 'moz-controller)
 ;;; moz-controller.el ends here
