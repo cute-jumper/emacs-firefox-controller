@@ -50,9 +50,10 @@
 
 (defvar moz-controller-overriding-keymap nil
   "Original `overriding-local-map'.")
-
+;;TODO catch quit in read
 (defun moz-controller-safe-read-string (prompt)
-  (replace-regexp-in-string "\'" "\\\\'" (read-string prompt)))
+  (let (overriding-local-map)
+    (replace-regexp-in-string "\'" "\\\\'" (read-string prompt))))
 
 (defun moz-controller-send (command &optional command-type)
   "Set command type and send COMMAND to `inferior-moz-process'."
@@ -111,11 +112,11 @@
 
 (moz-controller-defun moz-controller-page-top
   "Move to the top of the page."
-  "goDoCommand(\"cmd_moveTop\");")
+  "goDoCommand('cmd_moveTop');")
 
 (moz-controller-defun moz-controller-page-bottom
   "Move to the bottom of the page."
-  "goDoCommand(\"cmd_moveBottom\");")
+  "goDoCommand('cmd_moveBottom');")
 
 (moz-controller-defun moz-controller-tab-close
   "Close current tab."
@@ -151,12 +152,15 @@
   "Get the current tab's URL and add to `kill-ring'."
   "gBrowser.contentWindow.location.href;"
   (message moz-controller-repl-output)
-  ;; append to kill-ring
   (kill-new moz-controller-repl-output))
 
 (moz-controller-defun moz-controller-select-all
   "Select all the content in the current page."
-  "goDoCommand('cmd_selectAll')")
+  "goDoCommand('cmd_selectAll');")
+
+(moz-controller-defun moz-controller-unselect
+  "Unselect."
+  "goDoCommand('cmd_selectNone');")
 
 (moz-controller-defun moz-controller-copy
   "Copy."
@@ -188,13 +192,12 @@
 var i=0;\
 Array.prototype.slice.call(gBrowser.tabs).map(function(tab){tab.label=\"[\" + (i++) + \"]\" + tab.label;});\
 })();"
-  (let (overriding-local-map)
-    (moz-controller-send
-     (format
-      "Array.prototype.map.call(gBrowser.tabs,\
+  (moz-controller-send
+   (format
+    "Array.prototype.map.call(gBrowser.tabs,\
 function(tab){tab.label=tab.label.replace(/\[[0-9]+\]/, '');});\
 gBrowser.selectTabAtIndex(%d);"
-      (string-to-int (read-string "Tab id: "))))))
+    (string-to-int (moz-controller-safe-read-string "Tab id: ")))))
 
 (moz-controller-defun moz-controller-new-tab
   "Add new tab."
@@ -210,9 +213,8 @@ gBrowser.selectTabAtIndex(%d);"
 
 (moz-controller-defun moz-controller-goto-url
   "Goto URL."
-  (let (overriding-local-map)
-    (format "gBrowser.loadURI('http://%s');"
-            (moz-controller-safe-read-string "Goto: http://"))))
+  (format "gBrowser.loadURI('http://%s');"
+          (moz-controller-safe-read-string "Goto: http://")))
 
 (moz-controller-defun moz-controller-go-forward
   "Foward."
@@ -254,8 +256,7 @@ gBrowser.selectTabAtIndex(%d);"
 (moz-controller-defun moz-controller-search-edit
   "Edit search string."
   (let ((search-string
-         (progn (setq overriding-local-map)
-                (moz-controller-safe-read-string "Search: "))))
+         (moz-controller-safe-read-string "Search: ")))
     (add-hook 'mouse-leave-buffer-hook #'moz-controller-search-quit)
     (add-hook 'kbd-macro-termination-hook #'moz-controller-search-quit)
     (setq overriding-local-map moz-controller-remote-mode-search-map)
@@ -281,49 +282,54 @@ gBrowser.selectTabAtIndex(%d);"
     (message "Quit moz search.")
     "gFindBar.close();"))
 
+(defvar moz-controller-remote-mode-keymap-alist
+  `(("page" .
+     ((moz-controller-page-refresh "r" "refresh")
+      (moz-controller-page-line-down "j" "line down")
+      (moz-controller-page-line-up "k" "line up")
+      (moz-controller-page-down "n" "page down")
+      (moz-controller-page-up "p" "page up")
+      (moz-controller-page-top "<" "page top")
+      (moz-controller-page-bottom ">" "page bottom")))
+    ("zoom" .
+     ((moz-controller-zoom-in "+" "zoom in")
+      (moz-controller-zoom-out "-" "zoom out")
+      (moz-controller-zoom-reset "0" "zoom reset")))
+    ("tab" .
+     ((moz-controller-tab-close "x" "close tab")
+      (moz-controller-tab-previous "h" "previous tab")
+      (moz-controller-tab-next "l" "next tab")
+      (moz-controller-new-tab-and-switch "t" "new tab and switch")
+      (moz-controller-new-tab "T" "new tab in background")
+      (moz-controller-switch-tab "C-b" "switch tab by name")
+      (moz-controller-switch-tab-by-id "M-b" "switch tab by id")))
+    ("navigation" .
+     ((moz-controller-get-current-url "L" "copy current url")
+      (moz-controller-startpage "H" "homepage")
+      (moz-controller-goto-url "g" "goto url")
+      (moz-controller-go-forward "f" "forward")
+      (moz-controller-go-back "b" "backward")))
+    ("edit" .
+     ((moz-controller-select-all "a" "select all")
+      (moz-controller-unselect "u" "unselect")
+      (moz-controller-cut "W" "cut")
+      (moz-controller-copy "w" "copy")
+      (moz-controller-paste "y" "paste")))
+    ("window" .
+     ((moz-controller-maximize-window "^" "maximize")
+      (moz-controller-restore-window "&" "restore")
+      (moz-controller-minimize-window "*" "minimize")))
+    ("misc" .
+     ((moz-controller-search-start "s" "search-mode")
+      (moz-controller-switch-to-direct-mode "C-z" "switch to moz-controller-direct-mode")
+      (moz-controller-remote-mode-quit "q" "quit")))))
+
 (defvar moz-controller-remote-mode-map
   (let ((map (make-sparse-keymap)))
-    ;; page
-    (define-key map "r" #'moz-controller-page-refresh)
-    (define-key map "j" #'moz-controller-page-line-down)
-    (define-key map "k" #'moz-controller-page-line-up)
-    (define-key map "n" #'moz-controller-page-down)
-    (define-key map "p" #'moz-controller-page-up)
-    (define-key map "<" #'moz-controller-page-top)
-    (define-key map ">" #'moz-controller-page-bottom)
-    ;; zoom
-    (define-key map "+" #'moz-controller-zoom-in)
-    (define-key map "-" #'moz-controller-zoom-out)
-    (define-key map "0" #'moz-controller-zoom-reset)
-    ;; tab
-    (define-key map "x" #'moz-controller-tab-close)
-    (define-key map "h" #'moz-controller-tab-previous)
-    (define-key map "l" #'moz-controller-tab-next)
-    (define-key map "t" #'moz-controller-new-tab-and-switch)
-    (define-key map "T" #'moz-controller-new-tab)
-    (define-key map (kbd "C-b") #'moz-controller-switch-tab)
-    (define-key map (kbd "M-b") #'moz-controller-switch-tab-by-id)
-    ;; navigation
-    (define-key map "L" #'moz-controller-get-current-url)
-    (define-key map "H" #'moz-controller-startpage)
-    (define-key map "g" #'moz-controller-goto-url)
-    (define-key map "f" #'moz-controller-go-forward)
-    (define-key map "b" #'moz-controller-go-back)
-    ;; select, cut, copy & paste
-    (define-key map "a" #'moz-controller-select-all)
-    (define-key map "W" #'moz-controller-cut)
-    (define-key map "w" #'moz-controller-copy)
-    (define-key map "y" #'moz-controller-paste)
-    ;; window management
-    (define-key map "^" #'moz-controller-maximize-window)
-    (define-key map "&" #'moz-controller-restore-window)
-    (define-key map "*" #'moz-controller-minimize-window)
-    ;; search
-    (define-key map "s" #'moz-controller-search-start)
-    ;; switch to direct mode
-    (define-key map (kbd "C-z") #'moz-controller-switch-to-direct-mode)
-    ;; exit
-    (define-key map "q" #'moz-controller-remote-mode-quit)
+    (dolist (module moz-controller-remote-mode-keymap-alist)
+      (dolist (lst (cdr module))
+        (define-key map (kbd (cadr lst)) (car lst))))
+    (define-key map [t] nil)
     map)
   "Keymap of `moz-controller-remote-mode'.")
 
@@ -332,14 +338,66 @@ gBrowser.selectTabAtIndex(%d);"
   (setq moz-controller-overriding-keymap overriding-local-map)
   (setq overriding-local-map moz-controller-remote-mode-map)
   (add-hook 'mouse-leave-buffer-hook #'moz-controller-remote-mode-quit)
-  (add-hook 'kbd-macro-termination-hook #'moz-controller-remote-mode-quit))
+  (add-hook 'kbd-macro-termination-hook #'moz-controller-remote-mode-quit)
+  (moz-controller-remote-mode-with-help
+   (message "Enter moz-controller-remote-mode.")))
+
+(defmacro moz-controller-remote-mode-with-help (&rest body)
+  `(progn
+     ,@body
+     (sit-for 1)
+     (moz-controller-remote-mode-show-help)))
+
+(defun moz-controller-remote-mode-show-help ()
+  (let ((help "")
+        (index 0)
+        (line-count 0)
+        (separator (propertize "→" 'face font-lock-builtin-face))
+        first-column-max-widths
+        second-column-max-widths)
+    (dolist (module moz-controller-remote-mode-keymap-alist)
+      (setq help (concat help
+                         (propertize (car module) 'face font-lock-constant-face) "\n"))
+      (setq line-count (1+ line-count))
+      (setq first-column-max-widths '(0 0 0))
+      (setq second-column-max-widths '(0 0 0))
+      (dolist (lst (cdr module))
+        (let ((curr-val-1 (nth (mod index 3) first-column-max-widths))
+              (curr-val-2 (nth (mod index 3) second-column-max-widths)))
+          (setf (nth (mod index 3) first-column-max-widths)
+                (max curr-val-1 (length (nth 1 lst))))
+          (setf (nth (mod index 3) second-column-max-widths)
+                (max curr-val-2 (length (nth 2 lst))))
+          (setq index (1+ index))))
+      (setq index 0)
+      (dolist (lst (cdr module))
+        (and (> index 0)
+             (= (mod index 3) 0)
+             (setq help (concat help "\n"))
+             (setq line-count (1+ line-count)))
+        (setq help (concat help " "
+                           (format
+                            (format "%%%ds %%s %%-%ds"
+                                    (nth (mod index 3) first-column-max-widths)
+                                    (nth (mod index 3) second-column-max-widths))
+                            (propertize (cadr lst) 'face font-lock-keyword-face)
+                            separator
+                            (propertize (nth 2 lst) 'face font-lock-function-name-face))))
+        (setq index (1+ index)))
+      (setq help (concat help "\n"))
+      (setq line-count (1+ line-count))
+      (setq index 0))
+    (with-current-buffer (window-buffer (cadr (popwin:create-popup-window (+ line-count 2))))
+      (erase-buffer)
+      (insert help))))
 
 (defun moz-controller-remote-mode-quit ()
   (interactive)
   (remove-hook 'mouse-leave-buffer-hook #'moz-controller-remote-mode-quit)
   (remove-hook 'kbd-macro-termination-hook #'moz-controller-remote-mode-quit)
   (setq overriding-local-map moz-controller-overriding-keymap)
-  (setq moz-controller-overriding-keymap))
+  (setq moz-controller-overriding-keymap)
+  (message "Exit moz-controller-remote-mode."))
 
 (defun moz-controller-switch-to-direct-mode ()
   (interactive)
@@ -420,7 +478,8 @@ setTimeout(function(){document.commandDispatcher.focusedElement.style.background
   (add-hook 'mouse-leave-buffer-hook #'moz-controller-direct-mode-focus-or-quit)
   (add-hook 'kbd-macro-termination-hook #'moz-controller-direct-mode-focus-or-quit)
   (setq moz-controller-overriding-keymap overriding-local-map)
-  (setq overriding-local-map moz-controller-direct-mode-map))
+  (setq overriding-local-map moz-controller-direct-mode-map)
+  (message "Enter moz-controller-direct-mode."))
 
 (defun moz-controller-direct-mode-focus-or-quit (&optional quitp)
   (interactive "P")
