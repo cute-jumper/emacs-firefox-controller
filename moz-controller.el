@@ -168,7 +168,7 @@
   "Get the current tab's URL and add to `kill-ring'."
   "gBrowser.contentWindow.location.href;"
   nil
-  (message moz-controller-repl-output)
+  (message "URL copied: %s" moz-controller-repl-output)
   (kill-new moz-controller-repl-output))
 
 (moz-controller-defun moz-controller-select-all
