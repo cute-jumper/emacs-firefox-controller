@@ -32,6 +32,7 @@
 
 ;;; Code:
 (require 'moz)
+(require 'popwin)
 
 (defgroup moz-controller nil
   "Control Firefox from Emacs"
@@ -236,41 +237,65 @@ gBrowser.selectTabAtIndex(%d);"
   "Restore window."
   "restore();")
 
-(defsubst moz-controller-search-help ()
-  (message "[n]: search forward; [p]: search backward; [e]: edit search string; any other keys quit search."))
+(defun moz-controller-make-keymap (keymap-alist)
+  (let ((map (make-sparse-keymap))
+        key)
+    (dolist (module keymap-alist)
+      (dolist (lst (cdr module))
+        (setq key (cadr lst))
+        (define-key map (if (integer-or-marker-p key)
+                            (kbd key)
+                          key)
+          (car lst))))
+    map))
+
+(defvar moz-controller-remote-mode-search-keymap-alist
+  '(("moz-remote-mode-search" .
+     ((moz-controller-search-next "n" "search forward")
+      (moz-controller-search-previous "p" "search backward")
+      (moz-controller-search-edit "e" "edit search string")
+      (moz-controller-search-quit [t] "quit search")))))
 
 (defvar moz-controller-remote-mode-search-map
-  (let ((map (make-sparse-keymap)))
-    (define-key map "n" #'moz-controller-search-next)
-    (define-key map "p" #'moz-controller-search-previous)
-    (define-key map "e" #'moz-controller-search-edit)
-    (define-key map [t] #'moz-controller-search-quit)
-    map)
+  (moz-controller-make-keymap moz-controller-remote-mode-search-keymap-alist)
   "Keymap of search in `moz-controller-remote-mode'.")
+
+(defvar moz-controller-search-string nil)
+
+(defun moz-controller-remote-mode-search-show-string ()
+  (message "Search: %s" moz-controller-search-string))
 
 (moz-controller-defun moz-controller-search-start
   "Start search."
   "gFindBar.open();"
   (moz-controller-search-edit))
 
+(defun moz-controller-remote-mode-search-show-help ()
+  (moz-controller-show-help-from-keymap-alist
+   moz-controller-remote-mode-search-keymap-alist
+   4))
+
 (moz-controller-defun moz-controller-search-edit
   "Edit search string."
-  (let ((search-string
-         (moz-controller-safe-read-string "Search: ")))
-    (add-hook 'mouse-leave-buffer-hook #'moz-controller-search-quit)
-    (add-hook 'kbd-macro-termination-hook #'moz-controller-search-quit)
-    (setq overriding-local-map moz-controller-remote-mode-search-map)
-    (moz-controller-search-help)
-    (format "gFindBar._findField.value='%s';" search-string)))
+  (progn (moz-controller-hide-current-help)
+         (setq moz-controller-search-string
+               (moz-controller-safe-read-string "Search: "
+                                                #'moz-controller-search-quit))
+         (add-hook 'mouse-leave-buffer-hook #'moz-controller-search-quit)
+         (add-hook 'kbd-macro-termination-hook #'moz-controller-search-quit)
+         (setq overriding-local-map moz-controller-remote-mode-search-map)
+         (moz-controller-remote-mode-search-show-help)
+         (moz-controller-remote-mode-search-show-string)
+         (format "gFindBar._findField.value='%s';" moz-controller-search-string)))
 
 (moz-controller-defun moz-controller-search-next
   "Goto next search."
-  (progn (moz-controller-search-help)
+  (progn (moz-controller-remote-mode-search-show-string)
          "gFindBar.onFindAgainCommand(false);"))
 
 (moz-controller-defun moz-controller-search-previous
   "Goto previous search."
-  (progn (moz-controller-search-help)
+  (progn (moz-controller-remote-mode-search-show-string)
          "gFindBar.onFindAgainCommand(true);"))
 
 (moz-controller-defun moz-controller-search-quit
@@ -279,7 +304,8 @@ gBrowser.selectTabAtIndex(%d);"
     (setq overriding-local-map moz-controller-remote-mode-map)
     (remove-hook 'mouse-leave-buffer-hook #'moz-controller-search-quit)
     (remove-hook 'kbd-macro-termination-hook #'moz-controller-search-quit)
-    (message "Quit moz search.")
+    (moz-controller-hide-current-help)
+    (moz-controller-remote-mode-show-help)
     "gFindBar.close();"))
 
 (defvar moz-controller-remote-mode-keymap-alist
@@ -325,10 +351,8 @@ gBrowser.selectTabAtIndex(%d);"
       (moz-controller-remote-mode-quit "q" "quit")))))
 
 (defvar moz-controller-remote-mode-map
-  (let ((map (make-sparse-keymap)))
-    (dolist (module moz-controller-remote-mode-keymap-alist)
-      (dolist (lst (cdr module))
-        (define-key map (kbd (cadr lst)) (car lst))))
+  (let ((map (moz-controller-make-keymap
+              moz-controller-remote-mode-keymap-alist)))
     (define-key map [t] nil)
     map)
   "Keymap of `moz-controller-remote-mode'.")
@@ -339,57 +363,77 @@ gBrowser.selectTabAtIndex(%d);"
   (setq overriding-local-map moz-controller-remote-mode-map)
   (add-hook 'mouse-leave-buffer-hook #'moz-controller-remote-mode-quit)
   (add-hook 'kbd-macro-termination-hook #'moz-controller-remote-mode-quit)
-  (moz-controller-remote-mode-with-help
-   (message "Enter moz-controller-remote-mode.")))
+  (message "Enter moz-controller-remote-mode.")
+  (moz-controller-remote-mode-show-help))
 
-(defmacro moz-controller-remote-mode-with-help (&rest body)
-  `(progn
-     ,@body
-     (sit-for 1)
-     (moz-controller-remote-mode-show-help)))
+(defvar moz-controller-help-window nil)
 
-(defun moz-controller-remote-mode-show-help ()
+(defun moz-controller-popwin (size)
+  (interactive)
+  (when (not (window-live-p moz-controller-help-window))
+    (with-current-buffer (window-buffer (setq moz-controller-help-window
+                                              (cadr
+                                               (popwin:create-popup-window size))))
+      (setq mode-line-format nil)))
+  moz-controller-help-window)
+
+(defun moz-controller-show-help-from-keymap-alist (keymap-alist column-count)
   (let ((help "")
         (index 0)
         (line-count 0)
         (separator (propertize "→" 'face font-lock-builtin-face))
         first-column-max-widths
         second-column-max-widths)
-    (dolist (module moz-controller-remote-mode-keymap-alist)
+    (dolist (module keymap-alist)
       (setq help (concat help
-                         (propertize (car module) 'face font-lock-constant-face) "\n"))
-      (setq line-count (1+ line-count))
-      (setq first-column-max-widths '(0 0 0))
-      (setq second-column-max-widths '(0 0 0))
+                         (propertize (car module) 'face font-lock-constant-face) "\n")
+            line-count (1+ line-count)
+            first-column-max-widths (make-list column-count 0)
+            second-column-max-widths (make-list column-count 0))
       (dolist (lst (cdr module))
-        (let ((curr-val-1 (nth (mod index 3) first-column-max-widths))
-              (curr-val-2 (nth (mod index 3) second-column-max-widths)))
-          (setf (nth (mod index 3) first-column-max-widths)
-                (max curr-val-1 (length (nth 1 lst))))
-          (setf (nth (mod index 3) second-column-max-widths)
+        (let* ((idx (mod index column-count))
+               (curr-val-1 (nth idx first-column-max-widths))
+               (curr-val-2 (nth idx second-column-max-widths)))
+          (setf (nth idx first-column-max-widths)
+                (max curr-val-1 (length (if (vectorp (nth 1 lst))
+                                            "any other key"
+                                          (nth 1 lst)))))
+          (setf (nth idx second-column-max-widths)
                 (max curr-val-2 (length (nth 2 lst))))
           (setq index (1+ index))))
       (setq index 0)
       (dolist (lst (cdr module))
-        (and (> index 0)
-             (= (mod index 3) 0)
-             (setq help (concat help "\n"))
-             (setq line-count (1+ line-count)))
-        (setq help (concat help " "
-                           (format
-                            (format "%%%ds %%s %%-%ds"
-                                    (nth (mod index 3) first-column-max-widths)
-                                    (nth (mod index 3) second-column-max-widths))
-                            (propertize (cadr lst) 'face font-lock-keyword-face)
-                            separator
-                            (propertize (nth 2 lst) 'face font-lock-function-name-face))))
-        (setq index (1+ index)))
+        (let ((idx (mod index column-count))
+              (key (cadr lst)))
+          (and (> index 0)
+               (= idx 0)
+               (setq help (concat help "\n"))
+               (setq line-count (1+ line-count)))
+          (setq help (concat help " "
+                             (format
+                              (format "%%%ds %%s %%-%ds"
+                                      (nth idx first-column-max-widths)
+                                      (nth idx second-column-max-widths))
+                              (propertize (if (vectorp key) "any other key" key)
+                                          'face font-lock-keyword-face)
+                              separator
+                              (propertize (nth 2 lst) 'face font-lock-function-name-face))))
+          (setq index (1+ index))))
       (setq help (concat help "\n"))
       (setq line-count (1+ line-count))
       (setq index 0))
-    (with-current-buffer (window-buffer (cadr (popwin:create-popup-window (+ line-count 2))))
+    (with-current-buffer (window-buffer (moz-controller-popwin line-count))
       (erase-buffer)
       (insert help))))
+
+(defun moz-controller-remote-mode-show-help ()
+  (moz-controller-show-help-from-keymap-alist
+   moz-controller-remote-mode-keymap-alist
+   3))
+
+(defun moz-controller-hide-current-help ()
+  (when (window-live-p moz-controller-help-window)
+    (delete-window moz-controller-help-window)))
 
 (defun moz-controller-remote-mode-quit ()
   (interactive)
@@ -397,6 +441,7 @@ gBrowser.selectTabAtIndex(%d);"
   (remove-hook 'kbd-macro-termination-hook #'moz-controller-remote-mode-quit)
   (setq overriding-local-map moz-controller-overriding-keymap)
   (setq moz-controller-overriding-keymap)
+  (moz-controller-hide-current-help)
   (message "Exit moz-controller-remote-mode."))
 
 (defun moz-controller-switch-to-direct-mode ()
@@ -447,7 +492,7 @@ target.dispatchEvent(evt);\
   (let* ((evt last-input-event)
          (mods (event-modifiers evt))
          (c (event-basic-type evt)))
-    (message (concat "Key sent to firefox: "
+    (message (concat "Key sent: "
                      (if mods (format "%s " mods) "")
                      (format (if (characterp c) "%c" "%s") c)))
     (moz-controller-send-key (if (characterp c) c 0)
@@ -491,7 +536,7 @@ setTimeout(function(){document.commandDispatcher.focusedElement.style.background
         (setq moz-controller-overriding-keymap)
         (message "Exit moz-controller-direct-mode."))
     (moz-send-string "content.window.focus();")
-    (message "Move focus to firefox content window.
+    (message "Move focus to content window.
 Press C-g again to exit moz-controller-direct-mode.")))
 
 (defun moz-controller-switch-to-remote-mode ()
