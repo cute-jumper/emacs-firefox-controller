@@ -31,8 +31,10 @@
 ;;; Usage: see the Usage section in the README.org
 
 ;;; Code:
+
 (require 'moz)
 (require 'popwin)
+(require 'font-lock)
 
 (defgroup moz-controller nil
   "Control Firefox from Emacs"
