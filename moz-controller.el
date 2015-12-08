@@ -384,47 +384,6 @@ target.dispatchEvent(evt);\
                                 (upcase (symbol-name e)))))
     (_ 0)))
 
-(moz-controller-defun moz-controller-highlight-focus
-  "Highlight the focused element."
-  "(function(){if (document.commandDispatcher.focusedElement) {\
-var originalColor=document.commandDispatcher.focusedElement.style.backgroundColor;\
-document.commandDispatcher.focusedElement.style.backgroundColor='yellow';\
-setTimeout(function(){document.commandDispatcher.focusedElement.style.backgroundColor=originalColor;},1000);\
-}})();")
-
-(defvar moz-controller-direct-mode-map
-  (let ((map (make-sparse-keymap)))
-    (define-key map (kbd "C-g") #'moz-controller-direct-mode-quit)
-    (define-key map (kbd "C-G") #'moz-controller-highlight-focus)
-    (define-key map (kbd "C-z") #'moz-controller-switch-to-remote-mode)
-    (define-key map [t] #'moz-controller-direct-mode-send-key)
-    map)
-  "Keymap of `moz-controller-direct-mode'.")
-
-(defun moz-controller-direct-mode ()
-  (add-hook 'mouse-leave-buffer-hook #'moz-controller-direct-mode-quit)
-  (add-hook 'kbd-macro-termination-hook #'moz-controller-direct-mode-quit)
-  (setq moz-controller-overriding-keymap overriding-local-map)
-  (setq overriding-local-map moz-controller-direct-mode-map))
-
-(defun moz-controller-direct-mode-focus-or-quit (&optional quitp)
-  (interactive "P")
-  (if (or quitp (eq last-command 'moz-controller-direct-mode-quit))
-      (progn
-        (remove-hook 'mouse-leave-buffer-hook #'moz-controller-direct-mode-quit)
-        (remove-hook 'kbd-macro-termination-hook #'moz-controller-direct-mode-quit)
-        (setq overriding-local-map moz-controller-overriding-keymap)
-        (setq moz-controller-overriding-keymap)
-        (message "Exit moz-controller-direct-mode."))
-    (moz-send-string "content.window.focus();")
-    (message "Move focus to firefox content window.
-Press C-g again to exit moz-controller-direct-mode.")))
-
-(defun moz-controller-switch-to-remote-mode ()
-  (interactive)
-  (moz-controller-direct-mode-quit t)
-  (moz-controller-remote-mode))
-
 (defun moz-controller-direct-mode-send-key ()
   (interactive)
   (let* ((evt last-input-event)
@@ -438,6 +397,48 @@ Press C-g again to exit moz-controller-direct-mode.")))
                              (and (member 'meta mods) t)
                              (and (member 'shift mods) t)
                              (moz-controller-e2j c))))
+
+(moz-controller-defun moz-controller-highlight-focus
+  "Highlight the focused element."
+  "(function(){if (document.commandDispatcher.focusedElement) {\
+var originalColor=document.commandDispatcher.focusedElement.style.backgroundColor;\
+document.commandDispatcher.focusedElement.style.backgroundColor='yellow';\
+setTimeout(function(){document.commandDispatcher.focusedElement.style.backgroundColor=originalColor;},1000);\
+}})();")
+
+(defvar moz-controller-direct-mode-map
+  (let ((map (make-sparse-keymap)))
+    (define-key map (kbd "C-g") #'moz-controller-direct-mode-focus-or-quit)
+    (define-key map (kbd "C-M-g") #'moz-controller-highlight-focus)
+    (define-key map (kbd "C-z") #'moz-controller-switch-to-remote-mode)
+    (define-key map [t] #'moz-controller-direct-mode-send-key)
+    map)
+  "Keymap of `moz-controller-direct-mode'.")
+
+(defun moz-controller-direct-mode ()
+  (interactive)
+  (add-hook 'mouse-leave-buffer-hook #'moz-controller-direct-mode-focus-or-quit)
+  (add-hook 'kbd-macro-termination-hook #'moz-controller-direct-mode-focus-or-quit)
+  (setq moz-controller-overriding-keymap overriding-local-map)
+  (setq overriding-local-map moz-controller-direct-mode-map))
+
+(defun moz-controller-direct-mode-focus-or-quit (&optional quitp)
+  (interactive "P")
+  (if (or quitp (eq last-command 'moz-controller-direct-mode-focus-or-quit))
+      (progn
+        (remove-hook 'mouse-leave-buffer-hook #'moz-controller-direct-mode-focus-or-quit)
+        (remove-hook 'kbd-macro-termination-hook #'moz-controller-direct-mode-focus-or-quit)
+        (setq overriding-local-map moz-controller-overriding-keymap)
+        (setq moz-controller-overriding-keymap)
+        (message "Exit moz-controller-direct-mode."))
+    (moz-send-string "content.window.focus();")
+    (message "Move focus to firefox content window.
+Press C-g again to exit moz-controller-direct-mode.")))
+
+(defun moz-controller-switch-to-remote-mode ()
+  (interactive)
+  (moz-controller-direct-mode-focus-or-quit t)
+  (moz-controller-remote-mode))
 
 ;; (defun moz-controller-edit ()
 ;;   (interactive)
