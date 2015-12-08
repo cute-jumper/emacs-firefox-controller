@@ -51,17 +51,30 @@
 
 (defvar moz-controller-overriding-keymap nil
   "Original `overriding-local-map'.")
-;;TODO catch quit in read
-(defun moz-controller-safe-read-string (prompt)
+
+(defun moz-controller-safe-read-string (prompt &optional callback)
   (let (overriding-local-map)
-    (replace-regexp-in-string "\'" "\\\\'" (read-string prompt))))
+    (condition-case err
+        (replace-regexp-in-string "\'" "\\\\'" (read-string prompt))
+      (quit (and callback (funcall callback))
+            (signal 'quit nil)))))
 
 (defun moz-controller-send (command &optional command-type)
   "Set command type and send COMMAND to `inferior-moz-process'."
   (setq moz-controller-command-type command-type)
   (comint-simple-send (inferior-moz-process) command))
 
-(defmacro moz-controller-defun (name doc command &rest filter-body)
+(defun moz-controller-remote-mode-show-command (func-sym)
+  (let (doc)
+    (catch 'break
+      (dolist (module moz-controller-remote-mode-keymap-alist)
+        (dolist (lst (cdr module))
+          (when (eq (car lst) func-sym)
+            (setq doc (nth 2 lst))
+            (throw 'break nil)))))
+    (message "Send command: %s" doc)))
+
+(defmacro moz-controller-defun (name doc command &optional not-helpful-p &rest filter-body)
   "Macro for defining moz-controller commands."
   (declare (indent 1)
            (doc-string 2))
@@ -72,14 +85,16 @@
         `(defun ,name ()
            ,doc
            (interactive)
-           (moz-controller-send ,command))
+           (moz-controller-send ,command)
+           (or ,not-helpful-p (moz-controller-remote-mode-show-command ',name)))
       `(progn
          (defun ,name ()
            ,doc
            (interactive)
            (with-current-buffer (process-buffer (inferior-moz-process))
              (add-hook 'comint-output-filter-functions #',filter-name nil t))
-           (moz-controller-send ,command ',command-type))
+           (moz-controller-send ,command ',command-type)
+           (or ,not-helpful-p (moz-controller-remote-mode-show-command ',name)))
          (defun ,filter-name (output)
            (setq moz-controller-repl-output
                  (replace-regexp-in-string "\"\\(\\(.*\n?\\)*\\)\"\nrepl> " "\\1" output))
@@ -152,6 +167,7 @@
 (moz-controller-defun moz-controller-get-current-url
   "Get the current tab's URL and add to `kill-ring'."
   "gBrowser.contentWindow.location.href;"
+  nil
   (message moz-controller-repl-output)
   (kill-new moz-controller-repl-output))
 
@@ -178,6 +194,7 @@
 (moz-controller-defun moz-controller-switch-tab
   "Switch the tab."
   "Array.prototype.map.call(gBrowser.tabs, function(tab) {return tab.label;}).join(\"\\n\");"
+  t
   (let* (overriding-local-map
          (tab-titles (split-string moz-controller-repl-output "\n"))
          (selected-title
@@ -193,12 +210,18 @@
 var i=0;\
 Array.prototype.slice.call(gBrowser.tabs).map(function(tab){tab.label=\"[\" + (i++) + \"]\" + tab.label;});\
 })();"
+  t
   (moz-controller-send
    (format
     "Array.prototype.map.call(gBrowser.tabs,\
 function(tab){tab.label=tab.label.replace(/\[[0-9]+\]/, '');});\
 gBrowser.selectTabAtIndex(%d);"
-    (string-to-int (moz-controller-safe-read-string "Tab id: ")))))
+    (string-to-int
+     (moz-controller-safe-read-string "Tab id: "
+                                      (lambda ()
+                                        (moz-controller-send
+                                         "Array.prototype.map.call(gBrowser.tabs,\
+ function(tab){tab.label=tab.label.replace(/\[[0-9]+\]/, '');});")))))))
 
 (moz-controller-defun moz-controller-new-tab
   "Add new tab."
@@ -268,6 +291,7 @@ gBrowser.selectTabAtIndex(%d);"
 (moz-controller-defun moz-controller-search-start
   "Start search."
   "gFindBar.open();"
+  t
   (moz-controller-search-edit))
 
 (defun moz-controller-remote-mode-search-show-help ()
@@ -286,17 +310,20 @@ gBrowser.selectTabAtIndex(%d);"
          (setq overriding-local-map moz-controller-remote-mode-search-map)
          (moz-controller-remote-mode-search-show-help)
          (moz-controller-remote-mode-search-show-string)
-         (format "gFindBar._findField.value='%s';" moz-controller-search-string)))
+         (format "gFindBar._findField.value='%s';" moz-controller-search-string))
+  t)
 
 (moz-controller-defun moz-controller-search-next
   "Goto next search."
   (progn (moz-controller-remote-mode-search-show-string)
-         "gFindBar.onFindAgainCommand(false);"))
+         "gFindBar.onFindAgainCommand(false);")
+  t)
 
 (moz-controller-defun moz-controller-search-previous
   "Goto previous search."
   (progn (moz-controller-remote-mode-search-show-string)
-         "gFindBar.onFindAgainCommand(true);"))
+         "gFindBar.onFindAgainCommand(true);")
+  t)
 
 (moz-controller-defun moz-controller-search-quit
   "Quit search."
@@ -306,7 +333,8 @@ gBrowser.selectTabAtIndex(%d);"
     (remove-hook 'kbd-macro-termination-hook #'moz-controller-search-quit)
     (moz-controller-hide-current-help)
     (moz-controller-remote-mode-show-help)
-    "gFindBar.close();"))
+    "gFindBar.close();")
+  t)
 
 (defvar moz-controller-remote-mode-keymap-alist
   `(("page" .
@@ -353,7 +381,7 @@ gBrowser.selectTabAtIndex(%d);"
 (defvar moz-controller-remote-mode-map
   (let ((map (moz-controller-make-keymap
               moz-controller-remote-mode-keymap-alist)))
-    (define-key map [t] nil)
+    (define-key map [t] (lambda () (interactive) (message "Undefined.")))
     map)
   "Keymap of `moz-controller-remote-mode'.")
 
@@ -501,13 +529,15 @@ target.dispatchEvent(evt);\
                              (and (member 'shift mods) t)
                              (moz-controller-e2j c))))
 
-(moz-controller-defun moz-controller-highlight-focus
+(defun moz-controller-highlight-focus ()
   "Highlight the focused element."
-  "(function(){if (document.commandDispatcher.focusedElement) {\
+  (interactive)
+  (moz-controller-send
+   "(function(){if (document.commandDispatcher.focusedElement) {\
 var originalColor=document.commandDispatcher.focusedElement.style.backgroundColor;\
 document.commandDispatcher.focusedElement.style.backgroundColor='yellow';\
 setTimeout(function(){document.commandDispatcher.focusedElement.style.backgroundColor=originalColor;},1000);\
-}})();")
+}})();"))
 
 (defvar moz-controller-direct-mode-map
   (let ((map (make-sparse-keymap)))
