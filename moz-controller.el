@@ -1,10 +1,10 @@
 ;;; moz-controller.el --- Control Firefox from Emacs
 
+;; Copyright (C) 2015 Junpeng Qiu
 ;; Copyright (C) 2014 任文山 (Ren Wenshan)
 
-;; Author: 任文山 (Ren Wenshan) <renws1990 at gmail.com>
-;; URL: https://github.com/RenWenshan/emacs-moz-controller
-;; Version: 0.0.1
+;; URL: https://github.com/cute-jumper/emacs-moz-controller+
+;; Version: 0.1
 ;; Package-Requires: ((moz "0"))
 
 ;; This program is free software; you can redistribute it and/or modify
@@ -48,53 +48,41 @@
 (defvar moz-controller-command-type nil
   "The type of command that we send to *MozRepl*.")
 
-(defun moz-controller-repl-filter (output)
-  "Filter function of *MozRepl*.
-
-It gets the useful output of *MozRepl*, store it in `moz-controller-repl-output` and `kill-ring`"
-  (unless (string= output "repl> ")   ; ignore empty output (page up, page down, etc)
-    (setq moz-controller-repl-output
-          (replace-regexp-in-string "\"\\(\\(.*\n?\\)*\\)\"\nrepl> " "\\1" output))
-    (cond ((eq moz-controller-command-type 'moz-controller-get-current-url-type)
-           (message moz-controller-repl-output)
-           ;; append to kill-ring
-           (kill-new moz-controller-repl-output))
-          ((eq moz-controller-command-type 'moz-controller-switch-tab-type)
-           (let* ((tab-titles (split-string moz-controller-repl-output "\n"))
-                  (selected-title
-                   (completing-read "Select tab: " tab-titles)))
-             (moz-controller-send
-              (format
-               "gBrowser.selectTabAtIndex(%s);"
-               (position selected-title tab-titles :test 'equal)))))
-          ((eq moz-controller-command-type 'moz-controller-switch-tab-by-id-type)
-           (moz-controller-send
-            (format
-             "Array.prototype.map.call(gBrowser.tabs,\
-function(tab){tab.label=tab.label.replace(/\[[0-9]+\]/, '');});\
-gBrowser.selectTabAtIndex(%s);"
-             (read-string "Tab id: "))))
-          ((eq moz-controller-command-type 'moz-controller-search-start-type)
-           (moz-controller-search-edit)))))
+(defvar moz-controller-overriding-keymap nil
+  "Original `overriding-local-map'.")
 
 (defun moz-controller-send (command &optional command-type)
   "Set command type and send COMMAND to `inferior-moz-process'."
   (setq moz-controller-command-type command-type)
   (comint-simple-send (inferior-moz-process) command))
 
-(defmacro moz-controller-defun (name doc command &optional command-type)
-  "Macro for defining moz commands.
-
-NAME: function name.
-DOC: docstring for the function.
-COMMAND: the desired JavaScript expression, as a string.
-COMMAND-TYPE: the type of the command that is used for output filtering."
+(defmacro moz-controller-defun (name doc command &rest filter-body)
+  "Macro for defining moz-controller commands."
   (declare (indent 1)
            (doc-string 2))
-  `(defun ,name ()
-     ,doc
-     (interactive)
-     (moz-controller-send ,command ,command-type)))
+  (let ((filter-name (intern (format "%S-repl-filter" name)))
+        (no-filter-p (not filter-body))
+        (command-type (and filter-body (intern (format "%S-type" name)))))
+    (if no-filter-p
+        `(defun ,name ()
+           ,doc
+           (interactive)
+           (moz-controller-send ,command))
+      `(progn
+         (defun ,name ()
+           ,doc
+           (interactive)
+           (add-hook 'comint-output-filter-functions #',filter-name nil t)
+           (moz-controller-send ,command ',command-type))
+         (defun ,filter-name (output)
+           (setq moz-controller-repl-output
+                 (replace-regexp-in-string "\"\\(\\(.*\n?\\)*\\)\"\nrepl> " "\\1" output))
+           (when (eq moz-controller-command-type ',command-type)
+             (unwind-protect
+                 (progn
+                   ,@filter-body)
+               (remove-hook 'comint-output-filter-functions #',filter-name)
+               (setq moz-controller-command-type))))))))
 
 (moz-controller-defun moz-controller-page-refresh
   "Refresh current page"
@@ -157,7 +145,9 @@ COMMAND-TYPE: the type of the command that is used for output filtering."
 (moz-controller-defun moz-controller-get-current-url
   "Get the current tab's URL and add to `kill-ring'."
   "gBrowser.contentWindow.location.href;"
-  'moz-controller-get-current-url-type)
+  (message moz-controller-repl-output)
+  ;; append to kill-ring
+  (kill-new moz-controller-repl-output))
 
 (moz-controller-defun moz-controller-select-all
   "Select all the content in the current page."
@@ -186,7 +176,12 @@ COMMAND-TYPE: the type of the command that is used for output filtering."
 var i=0;\
 Array.prototype.slice.call(gBrowser.tabs).map(function(tab){tab.label=\"[\" + (i++) + \"]\" + tab.label;});\
 })();"
-  'moz-controller-switch-tab-by-id-type)
+  (moz-controller-send
+   (format
+    "Array.prototype.map.call(gBrowser.tabs,\
+function(tab){tab.label=tab.label.replace(/\[[0-9]+\]/, '');});\
+gBrowser.selectTabAtIndex(%s);"
+    (read-string "Tab id: "))))
 
 (moz-controller-defun moz-controller-new-tab
   "Add new tab."
@@ -224,28 +219,27 @@ Array.prototype.slice.call(gBrowser.tabs).map(function(tab){tab.label=\"[\" + (i
   "Restore window."
   "restore();")
 
-(moz-controller-defun moz-controller-search-start
-  "Start search"
-  "gFindBar.open();"
-  'moz-controller-search-start-type)
-
 (defsubst moz-controller-search-help ()
   (message "[n]: search forward; [p]: search backward; [e]: edit search string; any other keys quit search."))
 
-(moz-controller-defun moz-controller-search-edit
-  "Edit search string."
-  ;; FIXME
-  (let ((map (make-sparse-keymap))
-        (search-string
-         (progn (setq overriding-local-map)
-                (read-string "Search: "))))
+(defvar moz-controller-remote-mode-search-map
+  (let ((map (make-sparse-keymap)))
     (define-key map "n" #'moz-controller-search-next)
     (define-key map "p" #'moz-controller-search-previous)
     (define-key map "e" #'moz-controller-search-edit)
     (define-key map [t] #'moz-controller-search-quit)
+    map)
+  "Keymap of search in `moz-controller-remote-mode'.")
+
+(moz-controller-defun moz-controller-search-edit
+  "Edit search string."
+  (moz-controller-send "gFindBar.open();")
+  (let ((search-string
+         (progn (setq overriding-local-map)
+                (read-string "Search: "))))
     (add-hook 'mouse-leave-buffer-hook #'moz-controller-search-quit)
     (add-hook 'kbd-macro-termination-hook #'moz-controller-search-quit)
-    (setq overriding-local-map map)
+    (setq overriding-local-map moz-controller-remote-mode-search-map)
     (moz-controller-search-help)
     (format "gFindBar._findField.value='%s';" search-string)))
 
@@ -262,7 +256,7 @@ Array.prototype.slice.call(gBrowser.tabs).map(function(tab){tab.label=\"[\" + (i
 (moz-controller-defun moz-controller-search-quit
   "Quit search."
   (progn
-    (setq overriding-local-map)
+    (setq overriding-local-map moz-controller-remote-mode-map)
     (remove-hook 'mouse-leave-buffer-hook #'moz-controller-search-quit)
     (remove-hook 'kbd-macro-termination-hook #'moz-controller-search-quit)
     (message "Quit moz search.")
@@ -306,7 +300,7 @@ Array.prototype.slice.call(gBrowser.tabs).map(function(tab){tab.label=\"[\" + (i
     (define-key map "&" #'moz-controller-restore-window)
     (define-key map "*" #'moz-controller-minimize-window)
     ;; search
-    (define-key map "s" #'moz-controller-search-start)
+    (define-key map "s" #'moz-controller-search-edit)
     ;; switch to direct mode
     (define-key map (kbd "C-z") #'moz-controller-switch-to-direct-mode)
     ;; exit
@@ -314,37 +308,41 @@ Array.prototype.slice.call(gBrowser.tabs).map(function(tab){tab.label=\"[\" + (i
     map)
   "Keymap of `moz-controller-remote-mode'.")
 
+(defun moz-controller-remote-mode ()
+  (interactive)
+  (setq moz-controller-overriding-keymap overriding-local-map)
+  (setq overriding-local-map moz-controller-remote-mode-map)
+  (add-hook 'mouse-leave-buffer-hook #'moz-controller-remote-mode-quit)
+  (add-hook 'kbd-macro-termination-hook #'moz-controller-remote-mode-quit))
+
 (defun moz-controller-remote-mode-quit ()
   (interactive)
-  ;;TODO
-  )
+  (remove-hook 'mouse-leave-buffer-hook #'moz-controller-remote-mode-quit)
+  (remove-hook 'kbd-macro-termination-hook #'moz-controller-remote-mode-quit)
+  (setq overriding-local-map moz-controller-overriding-keymap)
+  (setq moz-controller-overriding-keymap))
 
 (defun moz-controller-switch-to-direct-mode ()
   (interactive)
-  ;;TODO
-  )
-
-(defvar moz-controller-remote-mode-search-map
-  (let ((map (make-sparse-keymap)))
-    (define-key map "n" #'moz-controller-search-next)
-    (define-key map "p" #'moz-controller-search-previous)
-    (define-key map "e" #'moz-controller-search-edit)
-    (define-key map [t] #'moz-controller-search-quit)
-    map)
-  "Keymap of search in `moz-controller-remote-mode'.")
+  (moz-controller-remote-mode-quit)
+  (moz-controller-direct-mode))
 
 (defvar moz-controller--generate-key-function-string
-  "function mozControllerGenerateKey(target,isCtrl,isAlt,isShift,keycode,charcode){\
+  "if (typeof(mozControllerGenerateKey) == 'undefined'){\
+function mozControllerGenerateKey(target,isCtrl,isAlt,isShift,keycode,charcode){\
 if (target==gURLBar.inputField && keycode == KeyEvent.DOM_VK_RETURN) {gBrowser.loadURI(target.value); content.window.focus(); return;}\
 else if (target == BrowserSearch.searchBar.textbox.inputField && keycode == KeyEvent.DOM_VK_RETURN) { BrowserSearch.searchBar.doSearch(target.value,'tab'); return;}\
 var evt=document.createEvent('KeyboardEvent');\
 evt.initKeyEvent('keypress',true,true,null,isCtrl,isAlt,isShift,false,keycode,charcode);\
 target.dispatchEvent(evt);\
+}\
 }")
 
-(moz-send-string moz-controller--generate-key-function-string)
+(defsubst moz-controller-maybe-define-generate-key ()
+  (moz-controller-send moz-controller--generate-key-function-string))
 
 (defun moz-controller-send-key (charcode &optional ctrlp altp shiftp keycode target)
+  (moz-controller-maybe-define-generate-key)
   (moz-controller-send (format "mozControllerGenerateKey(%s,%s,%s,%s,%s,%s);"
                                (or target "document.commandDispatcher.focusedElement || document")
                                (moz-controller-e2j ctrlp)
@@ -367,10 +365,13 @@ target.dispatchEvent(evt);\
                                 (upcase (symbol-name e)))))
     (_ 0)))
 
-(moz-controller-send-key ?e)
-(moz-controller-send-key 0 nil nil nil "KeyEvent.DOM_VK_BACK_SPACE")
-(moz-controller-send-key ?v nil t)
-(moz-controller-send-key 0 nil nil nil "KeyEvent.DOM_VK_RETURN")
+(moz-controller-defun moz-controller-highlight-focus
+  "Highlight the focused element."
+  "(function(){if (document.commandDispatcher.focusedElement) {\
+var originalColor=document.commandDispatcher.focusedElement.style.backgroundColor;\
+document.commandDispatcher.focusedElement.style.backgroundColor='yellow';\
+setTimeout(function(){document.commandDispatcher.focusedElement.style.backgroundColor=originalColor;},1000);\
+}})();")
 
 (defvar moz-controller-direct-mode-map
   (let ((map (make-sparse-keymap)))
@@ -382,30 +383,28 @@ target.dispatchEvent(evt);\
   "Keymap of `moz-controller-direct-mode'.")
 
 (defun moz-controller-direct-mode ()
-  (setq overriding-local-map map))
+  (add-hook 'mouse-leave-buffer-hook #'moz-controller-direct-mode-quit)
+  (add-hook 'kbd-macro-termination-hook #'moz-controller-direct-mode-quit)
+  (setq moz-controller-overriding-keymap overriding-local-map)
+  (setq overriding-local-map moz-controller-direct-mode-map))
 
-(defun moz-controller-switch-to-remote-mode ()
-  (interactive)
-  ;;TODO
-  )
-
-(moz-controller-defun moz-controller-highlight-focus
-  "Highlight the focused element."
-  "(function(){if (document.commandDispatcher.focusedElement) {\
-var originalColor=document.commandDispatcher.focusedElement.style.backgroundColor;\
-document.commandDispatcher.focusedElement.style.backgroundColor='yellow';\
-setTimeout(function(){document.commandDispatcher.focusedElement.style.backgroundColor=originalColor;},1000);\
-}})();")
-
-(defun moz-controller-direct-mode-quit ()
-  (interactive)
-  (if (eq last-command 'moz-controller-direct-mode-quit)
+(defun moz-controller-direct-mode-focus-or-quit (&optional quitp)
+  (interactive "P")
+  (if (or quitp (eq last-command 'moz-controller-direct-mode-quit))
       (progn
-        (setq overriding-local-map)
+        (remove-hook 'mouse-leave-buffer-hook #'moz-controller-direct-mode-quit)
+        (remove-hook 'kbd-macro-termination-hook #'moz-controller-direct-mode-quit)
+        (setq overriding-local-map moz-controller-overriding-keymap)
+        (setq moz-controller-overriding-keymap)
         (message "Exit moz-controller-direct-mode."))
     (moz-send-string "content.window.focus();")
     (message "Move focus to firefox content window.
 Press C-g again to exit moz-controller-direct-mode.")))
+
+(defun moz-controller-switch-to-remote-mode ()
+  (interactive)
+  (moz-controller-direct-mode-quit t)
+  (moz-controller-remote-mode))
 
 (defun moz-controller-direct-mode-send-key ()
   (interactive)
@@ -421,12 +420,6 @@ Press C-g again to exit moz-controller-direct-mode.")))
                              (and (member 'shift mods) t)
                              (moz-controller-e2j c))))
 
-(defun debug ()
-  (message "%s: %s" (event-modifiers last-input-event)
-           (event-basic-type last-input-event)))
-(add-hook 'post-command-hook 'debug)
-(remove-hook 'post-command-hook 'debug)
-
 ;; (defun moz-controller-edit ()
 ;;   (interactive)
 ;;   (moz-controller-send "a=Array.prototype.concat.call(Array.prototype.slice.call(content.document.getElementsByTagName('input')).filter(function(i){return (i.type == \"text\" || i.type == \"password\");}), Array.prototype.slice.call(content.document.getElementsByTagName('textarea')));i=-1;")
@@ -436,32 +429,6 @@ Press C-g again to exit moz-controller-direct-mode.")))
 ;; a[i].style.backgroundColor='yellow';\
 ;; a[i].focus();")
 ;;   (moz-controller-send (format "a[i].value='%s';" (read-string "Input: "))))
-
-;;TODO REMOVE THIS PLEASE
-;;;###autoload
-(define-minor-mode moz-controller-mode
-  "Toggle moz-controller mode.
-With no argument, the mode is toggled on/off.
-Non-nil argument turns mode on.
-Nil argument turns mode off.
-
-Commands:
-\\{moz-controller-mode-map}
-
-Entry to this mode calls the value of `moz-controller-mode-hook'."
-
-  :init-value nil
-  :lighter " MozCtrl"
-  :group 'moz-controller
-  :keymap moz-controller-mode-map
-
-  (let ((mode moz-controller-mode))
-    (with-current-buffer (process-buffer (inferior-moz-process))
-      (if mode
-          (add-hook 'comint-output-filter-functions #'moz-controller-repl-filter nil t)
-        (remove-hook 'comint-output-filter-functions #'moz-controller-repl-filter t))))
-  (if moz-controller-mode
-      (run-mode-hooks 'moz-controller-mode-hook)))
 
 (provide 'moz-controller)
 ;;; moz-controller.el ends here
