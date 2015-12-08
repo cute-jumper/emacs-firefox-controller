@@ -51,6 +51,9 @@
 (defvar moz-controller-overriding-keymap nil
   "Original `overriding-local-map'.")
 
+(defun moz-controller-safe-read-string (prompt)
+  (replace-regexp-in-string "\'" "\\\\'" (read-string prompt)))
+
 (defun moz-controller-send (command &optional command-type)
   "Set command type and send COMMAND to `inferior-moz-process'."
   (setq moz-controller-command-type command-type)
@@ -208,7 +211,8 @@ gBrowser.selectTabAtIndex(%d);"
 (moz-controller-defun moz-controller-goto-url
   "Goto URL."
   (let (overriding-local-map)
-    (format "gBrowser.loadURI(\"http://%s\");" (read-string "Goto: http://"))))
+    (format "gBrowser.loadURI('http://%s');"
+            (moz-controller-safe-read-string "Goto: http://"))))
 
 (moz-controller-defun moz-controller-go-forward
   "Foward."
@@ -251,7 +255,7 @@ gBrowser.selectTabAtIndex(%d);"
   "Edit search string."
   (let ((search-string
          (progn (setq overriding-local-map)
-                (read-string "Search: "))))
+                (moz-controller-safe-read-string "Search: "))))
     (add-hook 'mouse-leave-buffer-hook #'moz-controller-search-quit)
     (add-hook 'kbd-macro-termination-hook #'moz-controller-search-quit)
     (setq overriding-local-map moz-controller-remote-mode-search-map)
