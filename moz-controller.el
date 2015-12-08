@@ -72,7 +72,8 @@
          (defun ,name ()
            ,doc
            (interactive)
-           (add-hook 'comint-output-filter-functions #',filter-name nil t)
+           (with-current-buffer (process-buffer (inferior-moz-process))
+             (add-hook 'comint-output-filter-functions #',filter-name nil t))
            (moz-controller-send ,command ',command-type))
          (defun ,filter-name (output)
            (setq moz-controller-repl-output
@@ -81,7 +82,8 @@
              (unwind-protect
                  (progn
                    ,@filter-body)
-               (remove-hook 'comint-output-filter-functions #',filter-name)
+               (with-current-buffer (process-buffer (inferior-moz-process))
+                 (remove-hook 'comint-output-filter-functions #',filter-name))
                (setq moz-controller-command-type))))))))
 
 (moz-controller-defun moz-controller-page-refresh
@@ -168,7 +170,14 @@
 (moz-controller-defun moz-controller-switch-tab
   "Switch the tab."
   "Array.prototype.map.call(gBrowser.tabs, function(tab) {return tab.label;}).join(\"\\n\");"
-  'moz-controller-switch-tab-type)
+  (let* (overriding-local-map
+         (tab-titles (split-string moz-controller-repl-output "\n"))
+         (selected-title
+          (completing-read "Select tab: " tab-titles)))
+    (moz-controller-send
+     (format
+      "gBrowser.selectTabAtIndex(%s);"
+      (position selected-title tab-titles :test 'equal)))))
 
 (moz-controller-defun moz-controller-switch-tab-by-id
   "Switch the tab by id."
@@ -176,12 +185,13 @@
 var i=0;\
 Array.prototype.slice.call(gBrowser.tabs).map(function(tab){tab.label=\"[\" + (i++) + \"]\" + tab.label;});\
 })();"
-  (moz-controller-send
-   (format
-    "Array.prototype.map.call(gBrowser.tabs,\
+  (let (overriding-local-map)
+    (moz-controller-send
+     (format
+      "Array.prototype.map.call(gBrowser.tabs,\
 function(tab){tab.label=tab.label.replace(/\[[0-9]+\]/, '');});\
-gBrowser.selectTabAtIndex(%s);"
-    (read-string "Tab id: "))))
+gBrowser.selectTabAtIndex(%d);"
+      (string-to-int (read-string "Tab id: "))))))
 
 (moz-controller-defun moz-controller-new-tab
   "Add new tab."
@@ -197,7 +207,8 @@ gBrowser.selectTabAtIndex(%s);"
 
 (moz-controller-defun moz-controller-goto-url
   "Goto URL."
-  (format "gBrowser.loadURI(\"http://%s\");" (read-string "Goto: http://")))
+  (let (overriding-local-map)
+    (format "gBrowser.loadURI(\"http://%s\");" (read-string "Goto: http://"))))
 
 (moz-controller-defun moz-controller-go-forward
   "Foward."
@@ -231,9 +242,13 @@ gBrowser.selectTabAtIndex(%s);"
     map)
   "Keymap of search in `moz-controller-remote-mode'.")
 
+(moz-controller-defun moz-controller-search-start
+  "Start search."
+  "gFindBar.open();"
+  (moz-controller-search-edit))
+
 (moz-controller-defun moz-controller-search-edit
   "Edit search string."
-  (moz-controller-send "gFindBar.open();")
   (let ((search-string
          (progn (setq overriding-local-map)
                 (read-string "Search: "))))
@@ -282,8 +297,8 @@ gBrowser.selectTabAtIndex(%s);"
     (define-key map "l" #'moz-controller-tab-next)
     (define-key map "t" #'moz-controller-new-tab-and-switch)
     (define-key map "T" #'moz-controller-new-tab)
-    (define-key map "b" #'moz-controller-switch-tab)
-    (define-key map "B" #'moz-controller-switch-tab-by-id)
+    (define-key map (kbd "C-b") #'moz-controller-switch-tab)
+    (define-key map (kbd "M-b") #'moz-controller-switch-tab-by-id)
     ;; navigation
     (define-key map "L" #'moz-controller-get-current-url)
     (define-key map "H" #'moz-controller-startpage)
@@ -300,7 +315,7 @@ gBrowser.selectTabAtIndex(%s);"
     (define-key map "&" #'moz-controller-restore-window)
     (define-key map "*" #'moz-controller-minimize-window)
     ;; search
-    (define-key map "s" #'moz-controller-search-edit)
+    (define-key map "s" #'moz-controller-search-start)
     ;; switch to direct mode
     (define-key map (kbd "C-z") #'moz-controller-switch-to-direct-mode)
     ;; exit
