@@ -45,6 +45,9 @@
   :group 'moz-controller
   :type 'number)
 
+;; --------------------- ;;
+;; global vars and utils ;;
+;; --------------------- ;;
 (defvar moz-controller--overriding-keymap nil
   "Original `overriding-local-map'.")
 
@@ -72,7 +75,9 @@
           (car lst))))
     map))
 
-;; help system utilities
+;; -------------------------- ;;
+;; utils to build help window ;;
+;; -------------------------- ;;
 (defvar moz-controller--help-window nil)
 
 (defun moz-controller--popwin (size)
@@ -137,9 +142,14 @@
   (when (window-live-p moz-controller--help-window)
     (delete-window moz-controller--help-window)))
 
-;; -------------------------- ;;
-;; moz-controller-remote-mode ;;
-;; -------------------------- ;;
+;; -------------------------------------------------------------------------- ;;
+;; #####  ###### #    #  ####  ##### ######       #    #  ####  #####  ###### ;;
+;; #    # #      ##  ## #    #   #   #            ##  ## #    # #    # #      ;;
+;; #    # #####  # ## # #    #   #   #####  ##### # ## # #    # #    # #####  ;;
+;; #####  #      #    # #    #   #   #            #    # #    # #    # #      ;;
+;; #   #  #      #    # #    #   #   #            #    # #    # #    # #      ;;
+;; #    # ###### #    #  ####    #   ######       #    #  ####  #####  ###### ;;
+;; -------------------------------------------------------------------------- ;;
 (defvar moz-controller--repl-output ""
   "Output from *MozRepl*.")
 
@@ -148,7 +158,9 @@
 (defvar moz-controller--remote-command-type nil
   "The type of command that we send to *MozRepl*.")
 
-;; remote-mode help system
+;; ----------------------- ;;
+;; remote-mode help system ;;
+;; ----------------------- ;;
 (defun moz-controller--remote-mode-show-command (func-sym)
   (let (doc)
     (catch 'break
@@ -172,7 +184,9 @@
    moz-controller--remote-mode-keymap-alist
    3))
 
-;; convenient macro to define commands for `moz-controller-remote-mode'
+;; -------------------------------------------------------------------- ;;
+;; convenient macro to define commands for `moz-controller-remote-mode' ;;
+;; -------------------------------------------------------------------- ;;
 (defmacro moz-controller-remote-defun (name doc command &optional not-helpful-p &rest filter-body)
   "Macro for defining moz-controller commands."
   (declare (indent 1)
@@ -205,7 +219,9 @@
                  (remove-hook 'comint-output-filter-functions #',filter-name))
                (setq moz-controller--remote-command-type))))))))
 
-;; Various remote-mode commands
+;; ---------------------------- ;;
+;; Various remote-mode commands ;;
+;; ---------------------------- ;;
 (moz-controller-remote-defun moz-controller-page-refresh
   "Refresh current page"
   "setTimeout(function(){content.document.location.reload(true);}, '500');")
@@ -360,7 +376,9 @@ gBrowser.selectTabAtIndex(%d);"
   "Restore window."
   "restore();")
 
-;; remote-mode search commands
+;; --------------------------- ;;
+;; remote-mode search commands ;;
+;; --------------------------- ;;
 (moz-controller-remote-defun moz-controller-search-start
   "Start search."
   "gFindBar.open();"
@@ -404,7 +422,9 @@ gBrowser.selectTabAtIndex(%d);"
     "gFindBar.close();")
   t)
 
-;; search keymap
+;; ------------- ;;
+;; search keymap ;;
+;; ------------- ;;
 (defvar moz-controller--remote-mode-search-keymap-alist
   '(("moz-remote-mode-search" .
      ((moz-controller-search-next "n" "search forward")
@@ -416,7 +436,9 @@ gBrowser.selectTabAtIndex(%d);"
   (moz-controller--make-keymap moz-controller--remote-mode-search-keymap-alist)
   "Keymap of search in `moz-controller-remote-mode'.")
 
-;; remote-mode keymap
+;; ------------------ ;;
+;; remote-mode keymap ;;
+;; ------------------ ;;
 (defvar moz-controller--remote-mode-keymap-alist
   `(("page" .
      ((moz-controller-page-refresh "r" "refresh")
@@ -466,7 +488,9 @@ gBrowser.selectTabAtIndex(%d);"
     map)
   "Keymap of `moz-controller-remote-mode'.")
 
-;; Other remote-mode commands
+;; -------------------------- ;;
+;; Other remote-mode commands ;;
+;; -------------------------- ;;
 (defun moz-controller-remote-mode-quit ()
   (interactive)
   (remove-hook 'mouse-leave-buffer-hook #'moz-controller-remote-mode-quit)
@@ -491,11 +515,14 @@ gBrowser.selectTabAtIndex(%d);"
   (message "Enter moz-controller-remote-mode.")
   (moz-controller--remote-mode-show-help))
 
-;; -------------------------- ;;
-;; moz-controller-direct-mode ;;
-;; -------------------------- ;;
-
-;; variables and helper functions
+;; --------------------------------------------------------------------- ;;
+;; #####  # #####  ######  ####  #####       #    #  ####  #####  ###### ;;
+;; #    # # #    # #      #    #   #         ##  ## #    # #    # #      ;;
+;; #    # # #    # #####  #        #   ##### # ## # #    # #    # #####  ;;
+;; #    # # #####  #      #        #         #    # #    # #    # #      ;;
+;; #    # # #   #  #      #    #   #         #    # #    # #    # #      ;;
+;; #####  # #    # ######  ####    #         #    #  ####  #####  ###### ;;
+;; --------------------------------------------------------------------- ;;
 (defconst moz-controller--special-key-table
   '((backspace . "BACK_SPACE")
     (prior . "PAGE_UP")
@@ -531,7 +558,9 @@ target.dispatchEvent(evt);\
                                 (or keycode "0")
                                 charcode)))
 
-;; Keymap
+;; ------ ;;
+;; Keymap ;;
+;; ------ ;;
 (defvar moz-controller-direct-mode-map
   (let ((map (make-sparse-keymap)))
     (define-key map (kbd "C-g") #'moz-controller-direct-mode-focus-or-quit)
@@ -541,7 +570,9 @@ target.dispatchEvent(evt);\
     map)
   "Keymap of `moz-controller-direct-mode'.")
 
-;; Commands in `moz-controller-direct-mode'
+;; ---------------------------------------- ;;
+;; Commands in `moz-controller-direct-mode' ;;
+;; ---------------------------------------- ;;
 (defun moz-controller-direct-mode-send-key ()
   (interactive)
   (let* ((evt last-input-event)
@@ -593,6 +624,7 @@ Press C-g again to exit moz-controller-direct-mode.")))
   (setq overriding-local-map moz-controller-direct-mode-map)
   (message "Enter moz-controller-direct-mode."))
 
+;; Unused but maybe useful stuffs.
 ;; (defun moz-controller-edit ()
 ;;   (interactive)
 ;;   (moz-controller--send "a=Array.prototype.concat.call(Array.prototype.slice.call(content.document.getElementsByTagName('input')).filter(function(i){return (i.type == \"text\" || i.type == \"password\");}), Array.prototype.slice.call(content.document.getElementsByTagName('textarea')));i=-1;")
