@@ -71,10 +71,7 @@
     (dolist (module keymap-alist)
       (dolist (lst (cdr module))
         (setq key (cadr lst))
-        (define-key map (if (integer-or-marker-p key)
-                            (kbd key)
-                          key)
-          (car lst))))
+        (define-key map (if (vectorp key) key (kbd key)) (car lst))))
     map))
 
 ;; -------------------------- ;;
@@ -621,7 +618,7 @@ setTimeout(function(){document.commandDispatcher.focusedElement.style.background
         (message "Exit moz-controller-direct-mode.")
         (moz-controller--hide-current-help))
     (moz-send-string "content.window.focus();")
-    (message "Move focus to content window.
+    (message "Move focus to content window.  \
 Press C-g again to exit moz-controller-direct-mode.")))
 
 (defun moz-controller-switch-to-remote-mode ()
