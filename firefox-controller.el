@@ -47,6 +47,11 @@
   :group 'firefox-controller
   :type 'number)
 
+(defcustom firefox-controller-highlight-focus-background "yellow"
+  "Background color to highlight focus."
+  :group 'firefox-controller
+  :type 'string)
+
 ;; --------------------- ;;
 ;; global vars and utils ;;
 ;; --------------------- ;;
@@ -333,9 +338,9 @@ function(tab){tab.label=tab.label.replace(/\[[0-9]+\]/, '');});\
 gBrowser.selectTabAtIndex(%d);"
     (string-to-int
      (firefox-controller--safe-read-string "Tab id: "
-                                       (lambda ()
-                                         (firefox-controller--send
-                                          "Array.prototype.map.call(gBrowser.tabs,\
+                                           (lambda ()
+                                             (firefox-controller--send
+                                              "Array.prototype.map.call(gBrowser.tabs,\
  function(tab){tab.label=tab.label.replace(/\[[0-9]+\]/, '');});")))))))
 
 (firefox-controller-remote-defun firefox-controller-new-tab
@@ -389,7 +394,7 @@ gBrowser.selectTabAtIndex(%d);"
   (progn (firefox-controller--hide-current-help)
          (setq firefox-controller--remote-search-string
                (firefox-controller--safe-read-string "Search: "
-                                                 #'firefox-controller-search-quit))
+                                                     #'firefox-controller-search-quit))
          (add-hook 'mouse-leave-buffer-hook #'firefox-controller-search-quit)
          (add-hook 'kbd-macro-termination-hook #'firefox-controller-search-quit)
          (setq overriding-local-map firefox-controller-remote-mode-search-map)
@@ -551,12 +556,12 @@ target.dispatchEvent(evt);\
 (defun firefox-controller--direct-send-key (charcode &optional ctrlp altp shiftp keycode target)
   (firefox-controller--send firefox-controller--generate-key-function-string)
   (firefox-controller--send (format "mozControllerGenerateKey(%s,%s,%s,%s,%s,%s);"
-                                (or target "document.commandDispatcher.focusedElement || document")
-                                (firefox-controller--e2j ctrlp)
-                                (firefox-controller--e2j altp)
-                                (firefox-controller--e2j shiftp)
-                                (or keycode "0")
-                                charcode)))
+                                    (or target "document.commandDispatcher.focusedElement || document")
+                                    (firefox-controller--e2j ctrlp)
+                                    (firefox-controller--e2j altp)
+                                    (firefox-controller--e2j shiftp)
+                                    (or keycode "0")
+                                    charcode)))
 
 ;; ---------------- ;;
 ;; direct-mode help ;;
@@ -593,20 +598,21 @@ target.dispatchEvent(evt);\
                      (if mods (format "%s " mods) "")
                      (format (if (characterp c) "%c" "%s") c)))
     (firefox-controller--direct-send-key (if (characterp c) c 0)
-                                     (and (member 'control mods) t)
-                                     (and (member 'meta mods) t)
-                                     (and (member 'shift mods) t)
-                                     (firefox-controller--e2j c))))
+                                         (and (member 'control mods) t)
+                                         (and (member 'meta mods) t)
+                                         (and (member 'shift mods) t)
+                                         (firefox-controller--e2j c))))
 
 (defun firefox-controller-highlight-focus ()
   "Highlight the focused element."
   (interactive)
   (firefox-controller--send
-   "(function(){if (document.commandDispatcher.focusedElement) {\
+   (format
+    "(function(){if (document.commandDispatcher.focusedElement) {\
 var originalColor=document.commandDispatcher.focusedElement.style.backgroundColor;\
-document.commandDispatcher.focusedElement.style.backgroundColor='yellow';\
+document.commandDispatcher.focusedElement.style.backgroundColor='%s';\
 setTimeout(function(){document.commandDispatcher.focusedElement.style.backgroundColor=originalColor;},1000);\
-}})();"))
+}})();" firefox-controller-highlight-focus-background)))
 
 (defun firefox-controller-direct-mode-focus-or-quit (&optional quitp)
   (interactive "P")
