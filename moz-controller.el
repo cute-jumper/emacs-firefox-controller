@@ -3,9 +3,11 @@
 ;; Copyright (C) 2015 Junpeng Qiu
 ;; Copyright (C) 2014 任文山 (Ren Wenshan)
 
+;; Author: Junpeng Qiu <qjpchmail@gmail.com>, 任文山 (Ren Wenshan)
 ;; URL: https://github.com/cute-jumper/emacs-moz-controller+
 ;; Version: 0.1
-;; Package-Requires: ((moz "0"))
+;; Package-Requires: ((moz "0") (popwin "1.0.0"))
+;; Keywords: extensions
 
 ;; This program is free software; you can redistribute it and/or modify
 ;; it under the terms of the GNU General Public License as published by
@@ -558,14 +560,25 @@ target.dispatchEvent(evt);\
                                 (or keycode "0")
                                 charcode)))
 
+;; ---------------- ;;
+;; direct-mode help ;;
+;; ---------------- ;;
+(defun moz-controller--direct-mode-show-help ()
+  (moz-controller--show-help-from-keymap-alist
+   moz-controller-direct-mode-keymap-alist
+   3))
+
 ;; ------ ;;
 ;; Keymap ;;
 ;; ------ ;;
+(defvar moz-controller-direct-mode-keymap-alist
+  '(("special key bindings" .
+     ((moz-controller-direct-mode-focus-or-quit "C-g" "focus(once), quit(twice)")
+      (moz-controller-highlight-focus "M-g" "highlight focus")
+      (moz-controller-switch-to-remote-mode "C-z" "switch to moz-controller-remote-mode")))))
+
 (defvar moz-controller-direct-mode-map
-  (let ((map (make-sparse-keymap)))
-    (define-key map (kbd "C-g") #'moz-controller-direct-mode-focus-or-quit)
-    (define-key map (kbd "C-M-g") #'moz-controller-highlight-focus)
-    (define-key map (kbd "C-z") #'moz-controller-switch-to-remote-mode)
+  (let ((map (moz-controller--make-keymap moz-controller-direct-mode-keymap-alist)))
     (define-key map [t] #'moz-controller-direct-mode-send-key)
     map)
   "Keymap of `moz-controller-direct-mode'.")
@@ -605,7 +618,8 @@ setTimeout(function(){document.commandDispatcher.focusedElement.style.background
         (remove-hook 'kbd-macro-termination-hook #'moz-controller-direct-mode-focus-or-quit)
         (setq overriding-local-map moz-controller--overriding-keymap)
         (setq moz-controller--overriding-keymap)
-        (message "Exit moz-controller-direct-mode."))
+        (message "Exit moz-controller-direct-mode.")
+        (moz-controller--hide-current-help))
     (moz-send-string "content.window.focus();")
     (message "Move focus to content window.
 Press C-g again to exit moz-controller-direct-mode.")))
@@ -622,7 +636,8 @@ Press C-g again to exit moz-controller-direct-mode.")))
   (add-hook 'kbd-macro-termination-hook #'moz-controller-direct-mode-focus-or-quit)
   (setq moz-controller--overriding-keymap overriding-local-map)
   (setq overriding-local-map moz-controller-direct-mode-map)
-  (message "Enter moz-controller-direct-mode."))
+  (message "Enter moz-controller-direct-mode.")
+  (moz-controller--direct-mode-show-help))
 
 ;; Unused but maybe useful stuffs.
 ;; (defun moz-controller-edit ()
