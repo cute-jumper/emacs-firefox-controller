@@ -1,4 +1,4 @@
-;;; firefox-controller.el --- Firefox controller for Emacs
+;;; firefox-controller.el --- An improved Firefox controller for Emacs
 
 ;; Copyright (C) 2015 Junpeng Qiu
 ;; Copyright (C) 2014 任文山 (Ren Wenshan)
@@ -438,13 +438,13 @@ gBrowser.selectTabAtIndex(%d);"
 ;; search keymap ;;
 ;; ------------- ;;
 (defvar firefox-controller--remote-mode-search-keymap-alist
-  '(("moz-remote-mode-search" .
+  '(("firefox-controller-remote-mode-search" .
      ((firefox-controller-search-next "n" "search forward")
       (firefox-controller-search-previous "p" "search backward")
       (firefox-controller-search-edit "e" "edit search string")
       (firefox-controller-search-quit [t] "quit search")))))
 
-(defvar moz-contnroller-remote-mode-search-map
+(defvar firefox-controller-remote-mode-search-map
   (firefox-controller--make-keymap firefox-controller--remote-mode-search-keymap-alist)
   "Keymap of search in `firefox-controller-remote-mode'.")
 
@@ -456,6 +456,8 @@ gBrowser.selectTabAtIndex(%d);"
      ((firefox-controller-page-refresh "r" "refresh")
       (firefox-controller-page-line-down "j" "line down")
       (firefox-controller-page-line-up "k" "line up")
+      (firefox-controller-page-left "{" "scroll left")
+      (firefox-controller-page-right "}" "scroll right")
       (firefox-controller-page-down "n" "page down")
       (firefox-controller-page-up "p" "page up")
       (firefox-controller-page-top "<" "page top")
@@ -632,7 +634,7 @@ setTimeout(function(){document.commandDispatcher.focusedElement.style.background
         (setq firefox-controller--overriding-keymap)
         (message "Exit firefox-controller-direct-mode.")
         (firefox-controller--hide-current-help))
-    (moz-send-string "content.window.focus();")
+    (firefox-controller--send "content.window.focus();")
     (message "Move focus to content window.  \
 Press C-g again to exit firefox-controller-direct-mode.")))
 
