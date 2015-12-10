@@ -213,6 +213,100 @@
 (defvar firefox-controller--overriding-keymap nil
   "Original `overriding-local-map'.")
 
+(defvar firefox-controller--repl-output ""
+  "Output from *MozRepl*.")
+
+(defvar firefox-controller--remote-search-string nil)
+
+(defvar firefox-controller--remote-command-type nil
+  "The type of command that we send to *MozRepl*.")
+
+(defvar firefox-controller--help-window nil)
+
+;; ------------- ;;
+;; search keymap ;;
+;; ------------- ;;
+(defvar firefox-controller--remote-mode-search-keymap-alist
+  '(("firefox-controller-remote-mode-search" .
+     ((firefox-controller-search-next "n" "search forward")
+      (firefox-controller-search-previous "p" "search backward")
+      (firefox-controller-search-edit "e" "edit search string")
+      (firefox-controller-search-quit [t] "quit search")))))
+
+(defvar firefox-controller-remote-mode-search-map
+  (firefox-controller--make-keymap firefox-controller--remote-mode-search-keymap-alist)
+  "Keymap of search in `firefox-controller-remote-mode'.")
+
+;; ------------------ ;;
+;; remote-mode keymap ;;
+;; ------------------ ;;
+(defvar firefox-controller--remote-mode-keymap-alist
+  `(("page" .
+     ((firefox-controller-page-refresh "r" "refresh")
+      (firefox-controller-page-line-down "j" "line down")
+      (firefox-controller-page-line-up "k" "line up")
+      (firefox-controller-page-left "[" "scroll left")
+      (firefox-controller-page-right "]" "scroll right")
+      (firefox-controller-page-down "n" "page down")
+      (firefox-controller-page-up "p" "page up")
+      (firefox-controller-page-top "<" "page top")
+      (firefox-controller-page-bottom ">" "page bottom")
+      (firefox-controller-focus-content "C-g" "focus content")))
+    ("zoom" .
+     ((firefox-controller-zoom-in "+" "zoom in")
+      (firefox-controller-zoom-out "-" "zoom out")
+      (firefox-controller-zoom-reset "0" "zoom reset")))
+    ("tab" .
+     ((firefox-controller-tab-close "x" "close tab")
+      (firefox-controller-tab-previous "h" "previous tab")
+      (firefox-controller-tab-next "l" "next tab")
+      (firefox-controller-new-tab-and-switch "t" "new tab and switch")
+      (firefox-controller-new-tab "T" "new tab in background")
+      (firefox-controller-switch-tab "C-b" "switch tab by name")
+      (firefox-controller-switch-tab-by-id "M-b" "switch tab by id")))
+    ("navigation" .
+     ((firefox-controller-get-current-url "L" "copy current url")
+      (firefox-controller-startpage "H" "homepage")
+      (firefox-controller-goto-url "g" "goto url")
+      (firefox-controller-go-forward "f" "forward")
+      (firefox-controller-go-back "b" "backward")))
+    ("edit" .
+     ((firefox-controller-select-all "a" "select all")
+      (firefox-controller-unselect "u" "unselect")
+      (firefox-controller-cut "W" "cut")
+      (firefox-controller-copy "w" "copy")
+      (firefox-controller-paste "y" "paste")))
+    ("window" .
+     ((firefox-controller-maximize-window "^" "maximize")
+      (firefox-controller-restore-window "&" "restore")
+      (firefox-controller-minimize-window "*" "minimize")))
+    ("misc" .
+     ((firefox-controller-search-start "s" "search-mode")
+      (firefox-controller-switch-to-direct-mode "C-z" "switch to firefox-controller-direct-mode")
+      (firefox-controller-remote-mode-quit "q" "quit")))))
+
+(defvar firefox-controller-remote-mode-map
+  (let ((map (firefox-controller--make-keymap
+              firefox-controller--remote-mode-keymap-alist)))
+    (define-key map [t] (lambda () (interactive) (message "Undefined.")))
+    map)
+  "Keymap of `firefox-controller-remote-mode'.")
+
+;; ------------------ ;;
+;; direct-mode keymap ;;
+;; ------------------ ;;
+(defvar firefox-controller-direct-mode-keymap-alist
+  '(("special key bindings" .
+     ((firefox-controller-direct-mode-focus-or-quit "C-g" "focus(once), quit(twice)")
+      (firefox-controller-highlight-focus "M-g" "highlight focus")
+      (firefox-controller-switch-to-remote-mode "C-z" "switch to firefox-controller-remote-mode")))))
+
+(defvar firefox-controller-direct-mode-map
+  (let ((map (firefox-controller--make-keymap firefox-controller-direct-mode-keymap-alist)))
+    (define-key map [t] #'firefox-controller-direct-mode-send-key)
+    map)
+  "Keymap of `firefox-controller-direct-mode'.")
+
 (defun firefox-controller--safe-read-string (prompt &optional callback)
   (let (overriding-local-map)
     (condition-case err
@@ -237,8 +331,6 @@
 ;; -------------------------- ;;
 ;; utils to build help window ;;
 ;; -------------------------- ;;
-(defvar firefox-controller--help-window nil)
-
 (defun firefox-controller--popwin (size)
   (interactive)
   (when (not (window-live-p firefox-controller--help-window))
@@ -309,14 +401,6 @@
 ;; #   #  #      #    # #    #   #   #            #    # #    # #    # #      ;;
 ;; #    # ###### #    #  ####    #   ######       #    #  ####  #####  ###### ;;
 ;; -------------------------------------------------------------------------- ;;
-(defvar firefox-controller--repl-output ""
-  "Output from *MozRepl*.")
-
-(defvar firefox-controller--remote-search-string nil)
-
-(defvar firefox-controller--remote-command-type nil
-  "The type of command that we send to *MozRepl*.")
-
 ;; ----------------------- ;;
 ;; remote-mode help system ;;
 ;; ----------------------- ;;
@@ -593,75 +677,6 @@ gBrowser.selectTabAtIndex(%d);"
     "gFindBar.close();")
   t)
 
-;; ------------- ;;
-;; search keymap ;;
-;; ------------- ;;
-(defvar firefox-controller--remote-mode-search-keymap-alist
-  '(("firefox-controller-remote-mode-search" .
-     ((firefox-controller-search-next "n" "search forward")
-      (firefox-controller-search-previous "p" "search backward")
-      (firefox-controller-search-edit "e" "edit search string")
-      (firefox-controller-search-quit [t] "quit search")))))
-
-(defvar firefox-controller-remote-mode-search-map
-  (firefox-controller--make-keymap firefox-controller--remote-mode-search-keymap-alist)
-  "Keymap of search in `firefox-controller-remote-mode'.")
-
-;; ------------------ ;;
-;; remote-mode keymap ;;
-;; ------------------ ;;
-(defvar firefox-controller--remote-mode-keymap-alist
-  `(("page" .
-     ((firefox-controller-page-refresh "r" "refresh")
-      (firefox-controller-page-line-down "j" "line down")
-      (firefox-controller-page-line-up "k" "line up")
-      (firefox-controller-page-left "[" "scroll left")
-      (firefox-controller-page-right "]" "scroll right")
-      (firefox-controller-page-down "n" "page down")
-      (firefox-controller-page-up "p" "page up")
-      (firefox-controller-page-top "<" "page top")
-      (firefox-controller-page-bottom ">" "page bottom")
-      (firefox-controller-focus-content "C-g" "focus content")))
-    ("zoom" .
-     ((firefox-controller-zoom-in "+" "zoom in")
-      (firefox-controller-zoom-out "-" "zoom out")
-      (firefox-controller-zoom-reset "0" "zoom reset")))
-    ("tab" .
-     ((firefox-controller-tab-close "x" "close tab")
-      (firefox-controller-tab-previous "h" "previous tab")
-      (firefox-controller-tab-next "l" "next tab")
-      (firefox-controller-new-tab-and-switch "t" "new tab and switch")
-      (firefox-controller-new-tab "T" "new tab in background")
-      (firefox-controller-switch-tab "C-b" "switch tab by name")
-      (firefox-controller-switch-tab-by-id "M-b" "switch tab by id")))
-    ("navigation" .
-     ((firefox-controller-get-current-url "L" "copy current url")
-      (firefox-controller-startpage "H" "homepage")
-      (firefox-controller-goto-url "g" "goto url")
-      (firefox-controller-go-forward "f" "forward")
-      (firefox-controller-go-back "b" "backward")))
-    ("edit" .
-     ((firefox-controller-select-all "a" "select all")
-      (firefox-controller-unselect "u" "unselect")
-      (firefox-controller-cut "W" "cut")
-      (firefox-controller-copy "w" "copy")
-      (firefox-controller-paste "y" "paste")))
-    ("window" .
-     ((firefox-controller-maximize-window "^" "maximize")
-      (firefox-controller-restore-window "&" "restore")
-      (firefox-controller-minimize-window "*" "minimize")))
-    ("misc" .
-     ((firefox-controller-search-start "s" "search-mode")
-      (firefox-controller-switch-to-direct-mode "C-z" "switch to firefox-controller-direct-mode")
-      (firefox-controller-remote-mode-quit "q" "quit")))))
-
-(defvar firefox-controller-remote-mode-map
-  (let ((map (firefox-controller--make-keymap
-              firefox-controller--remote-mode-keymap-alist)))
-    (define-key map [t] (lambda () (interactive) (message "Undefined.")))
-    map)
-  "Keymap of `firefox-controller-remote-mode'.")
-
 ;; -------------------------- ;;
 ;; Other remote-mode commands ;;
 ;; -------------------------- ;;
@@ -741,24 +756,9 @@ target.dispatchEvent(evt);\
    firefox-controller-direct-mode-keymap-alist
    3))
 
-;; ------ ;;
-;; Keymap ;;
-;; ------ ;;
-(defvar firefox-controller-direct-mode-keymap-alist
-  '(("special key bindings" .
-     ((firefox-controller-direct-mode-focus-or-quit "C-g" "focus(once), quit(twice)")
-      (firefox-controller-highlight-focus "M-g" "highlight focus")
-      (firefox-controller-switch-to-remote-mode "C-z" "switch to firefox-controller-remote-mode")))))
-
-(defvar firefox-controller-direct-mode-map
-  (let ((map (firefox-controller--make-keymap firefox-controller-direct-mode-keymap-alist)))
-    (define-key map [t] #'firefox-controller-direct-mode-send-key)
-    map)
-  "Keymap of `firefox-controller-direct-mode'.")
-
-;; ---------------------------------------- ;;
+;; -------------------------------------------- ;;
 ;; Commands in `firefox-controller-direct-mode' ;;
-;; ---------------------------------------- ;;
+;; -------------------------------------------- ;;
 (defun firefox-controller-direct-mode-send-key ()
   (interactive)
   (let* ((evt last-input-event)
