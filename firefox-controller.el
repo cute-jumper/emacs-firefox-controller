@@ -42,7 +42,8 @@
 ;; 2 Intro
 ;; 3 `firefox-controller-remote-mode'
 ;; 4 `firefox-controller-direct-mode'
-;; 5 Acknowledgment
+;; 5 Customization
+;; 6 Acknowledgment
 
 
 
@@ -164,7 +165,16 @@
 ;;   [hok] https://github.com/mooz/keysnail/raw/master/plugins/hok.ks.js
 
 
-;; 5 Acknowledgment
+;; 5 Customization
+;; ===============
+
+;;   - `firefox-controller-zoom-step': Zoom step. Default value is 0.1.
+;;   - `firefox-controller-highlight-focus-background': The background
+;;      color used by `firefox-controller-highlight-focus' command. Default
+;;      value is "yellow".
+
+
+;; 6 Acknowledgment
 ;; ================
 
 ;;   - [RenWenshan] for the original [moz-controller].

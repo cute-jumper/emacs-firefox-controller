@@ -51,7 +51,7 @@ experience for firefox. We don't have to recreate some firefox extensions in
 The use of =firefox-controller-direct-mode= is quite straightforward. =M-x
 firefox-controller-direct-mode=, then you can use all the key bindings as if you
 are in firefox instead of Emacs, except for three special key bindings:
-1. @@html:<kbd>@@C-g@@html:</kbd>@@: Whenl you press
+1. @@html:<kbd>@@C-g@@html:</kbd>@@: When you press
    @@html:<kbd>@@C-g@@html:</kbd>@@ once, the focus of the firefox will move to
    the content window, and if you press @@html:<kbd>@@C-g@@html:</kbd>@@ twice
    in a row, it will quit =firefox-controller-direct-mode=.
@@ -75,6 +75,11 @@ address bar of course). Then go to google.com, and use
 @@html:<kbd>@@M-g@@html:</kbd>@@ again to confirm the current focused element in
 firefox is the seach box. After I type and search "emacs", I use KeySnail's
 plugin [[https://github.com/mooz/keysnail/raw/master/plugins/hok.ks.js][hok]] to jump to a link and open it.
+
+* Customization
+  - =firefox-controller-zoom-step=: Zoom step. Default value is 0.1.
+  - =firefox-controller-highlight-focus-background=: The background color used by
+    =firefox-controller-highlight-focus= command. Default value is "yellow".
 
 * Acknowledgment
   - [[https://github.com/RenWenshan/][RenWenshan]] for the original [[https://github.com/RenWenshan/emacs-moz-controller][moz-controller]].
