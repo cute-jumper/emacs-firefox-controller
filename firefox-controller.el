@@ -417,6 +417,10 @@
   "Move to the bottom of the page."
   "goDoCommand('cmd_moveBottom');")
 
+(firefox-controller-remote-defun firefox-controller-focus-content
+  "Move focus to content."
+  "content.window.focus();")
+
 (firefox-controller-remote-defun firefox-controller-tab-close
   "Close current tab."
   "content.window.close();")
@@ -616,7 +620,8 @@ gBrowser.selectTabAtIndex(%d);"
       (firefox-controller-page-down "n" "page down")
       (firefox-controller-page-up "p" "page up")
       (firefox-controller-page-top "<" "page top")
-      (firefox-controller-page-bottom ">" "page bottom")))
+      (firefox-controller-page-bottom ">" "page bottom")
+      (firefox-controller-focus-content "C-g" "focus content")))
     ("zoom" .
      ((firefox-controller-zoom-in "+" "zoom in")
       (firefox-controller-zoom-out "-" "zoom out")
