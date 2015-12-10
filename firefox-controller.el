@@ -233,6 +233,15 @@
       (firefox-controller-search-edit "e" "edit search string")
       (firefox-controller-search-quit [t] "quit search")))))
 
+(defun firefox-controller--make-keymap (keymap-alist)
+  (let ((map (make-sparse-keymap))
+        key)
+    (dolist (module keymap-alist)
+      (dolist (lst (cdr module))
+        (setq key (cadr lst))
+        (define-key map (if (vectorp key) key (kbd key)) (car lst))))
+    map))
+
 (defvar firefox-controller-remote-mode-search-map
   (firefox-controller--make-keymap firefox-controller--remote-mode-search-keymap-alist)
   "Keymap of search in `firefox-controller-remote-mode'.")
@@ -318,15 +327,6 @@
   "Set command type and send COMMAND to `inferior-moz-process'."
   (setq firefox-controller--remote-command-type command-type)
   (comint-simple-send (inferior-moz-process) command))
-
-(defun firefox-controller--make-keymap (keymap-alist)
-  (let ((map (make-sparse-keymap))
-        key)
-    (dolist (module keymap-alist)
-      (dolist (lst (cdr module))
-        (setq key (cadr lst))
-        (define-key map (if (vectorp key) key (kbd key)) (car lst))))
-    map))
 
 ;; -------------------------- ;;
 ;; utils to build help window ;;
