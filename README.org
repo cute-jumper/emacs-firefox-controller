@@ -73,7 +73,7 @@ Explanation: After I invoke =firefox-controller-direct-mode=, I type
 @@html:<kbd>@@M-g@@html:</kbd>@@ to highlight my current location(which is the
 address bar of course). Then go to google.com, and use
 @@html:<kbd>@@M-g@@html:</kbd>@@ again to confirm the current focused element in
-firefox is the seach box. After I type and search "emacs", I use KeySnail's
+firefox is the search box. After I type and search "emacs", I use KeySnail's
 plugin [[https://github.com/mooz/keysnail/raw/master/plugins/hok.ks.js][hok]] to jump to a link and open it.
 
 * Customization
