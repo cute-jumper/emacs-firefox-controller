@@ -246,6 +246,14 @@
   "Scroll up the current window by one page."
   "content.window.scrollByPages(-1);")
 
+(firefox-controller-remote-defun firefox-controller-page-left
+  "Scroll to the left."
+  "goDoCommand('cmd_scrollLeft');")
+
+(firefox-controller-remote-defun firefox-controller-page-right
+  "Scroll to the right."
+  "goDoCommand('cmd_scrollRight');")
+
 (firefox-controller-remote-defun firefox-controller-page-top
   "Move to the top of the page."
   "goDoCommand('cmd_moveTop');")
