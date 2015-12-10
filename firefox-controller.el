@@ -108,13 +108,13 @@
 ;;   Here is the screeshot when using `firefox-controller-remote-mode':
 ;;   [https://github.com/cute-jumper/ace-pinyin/blob/master/screenshots/remote-mode.png]
 
-;;   As we can see in the screenshot, we have most of the common commands
-;;   available. For example, n to scroll down by one page, and t to open a
-;;   new tab and switch to it. You can exit the
-;;   `firefox-controller-remote-mode' by q, and you can search the web page
-;;   by pressing s, and here is the screenshot for the search mode in
-;;   `firefox-controller-remote-mode' (we are search "bibtex" in the
-;;   current web page):
+;;   As we can see in the screenshot, we have defined most of the commonly used
+;;   commands in firefox. For example, n to scroll down by one page, and t to
+;;   open a new tab and switch to it. You can exit the
+;;   `firefox-controller-remote-mode' by q, and you can search the web page by
+;;   pressing s, and here is the screenshot for the search mode in
+;;   `firefox-controller-remote-mode' (we are searching "bibtex" in the current
+;;   web page):
 ;;   [https://github.com/cute-jumper/ace-pinyin/blob/master/screenshots/search-mode.png]
 
 

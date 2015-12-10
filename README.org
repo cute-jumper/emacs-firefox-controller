@@ -9,7 +9,7 @@
       : (add-to-list 'load-path "/path/to/firefox-controller.el")
       : (require 'firefox-controller)
 
-* Intro
+* Introduction
 This project started as a fork of [[https://github.com/RenWenshan][Wenshan]]'s [[https://github.com/RenWenshan/emacs-moz-controller][moz-controller]], but I ended up
 rewriting most of the code and chose a quite different way to use it.
 
@@ -29,14 +29,14 @@ firefox.
 Here is the screeshot when using =firefox-controller-remote-mode=:
 [[./screenshots/remote-mode.png]]
 
-As we can see in the screenshot, we have most of the common commands available.
-For example, @@html:<kbd>@@n@@html:</kbd>@@ to scroll down by one page, and
-@@html:<kbd>@@t@@html:</kbd>@@ to open a new tab and switch to it. You can exit
-the =firefox-controller-remote-mode= by @@html:<kbd>@@q@@html:</kbd>@@, and you
-can search the web page by pressing @@html:<kbd>@@s@@html:</kbd>@@, and here is
-the screenshot for the search mode in =firefox-controller-remote-mode= (we are
-search "bibtex" in the current web page):
-[[./screenshots/search-mode.png]]
+As we can see in the screenshot, we have defined most of the commonly used
+commands in firefox. For example, @@html:<kbd>@@n@@html:</kbd>@@ to scroll down
+by one page, and @@html:<kbd>@@t@@html:</kbd>@@ to open a new tab and switch to
+it. You can exit the =firefox-controller-remote-mode= by
+@@html:<kbd>@@q@@html:</kbd>@@, and you can search the web page by pressing
+@@html:<kbd>@@s@@html:</kbd>@@, and here is the screenshot for the search mode
+in =firefox-controller-remote-mode= (we are searching "bibtex" in the current
+web page): [[./screenshots/search-mode.png]]
 
 * =firefox-controller-direct-mode=
 The limitation of =firefox-controller-remote-mode= is that under that mode, the
