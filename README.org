@@ -1,93 +1,80 @@
-#+TITLE: moz-controller: Control Firefox from Emacs
-
-It's annoying to switch between your text editor and your web browser constantly when you're hacking and reading web pages at the time. *moz-controller* allows you to control Firefox to scroll, refresh, zoom in, zoom out, close tabs and switch tabs without leaving Emacs.
-
-[[http://youtu.be/gP-zpA4WteM][Video Demo]]
-
-* Functions and Keybindings
-  | function               | name                            | keybinding |
-  |------------------------+---------------------------------+------------|
-  | get current tab's url  | moz-controller-get-current-url  | C-c m l    |
-  | refresh                | moz-controller-page-refresh     | C-c m R    |
-  | scroll down            | moz-controller-page-down        | C-c m n    |
-  | scroll up              | moz-controller-page-up          | C-c m p    |
-  | zoom in                | moz-controller-zoom-in          | C-c m +    |
-  | zoom out               | moz-controller-zoom-out         | C-c m -    |
-  | zoom reset             | moz-controller-zoom-reset       | C-c m 0    |
-  | switch to previous tab | moz-controller-tab-previous     | C-c m b    |
-  | switch to next tab     | moz-controller-tab-next         | C-c m f    |
-  | close current tab      | moz-controller-tab-close        | C-c m k    |
-  | view page source code  | moz-controller-view-page-source | C-c m u    |
+#+TITLE: firefox-controller: An Improved Firefox Controller for Emacs!
 
 * Installation
-** Firefox Plugin
+** Firefox Extension
    Install [[https://addons.mozilla.org/en-US/firefox/addon/mozrepl/][MozRepl]] in Firefox.
+** Emacs Extensions
+   1. Install [[https://github.com/bard/mozrepl/wiki/Emacs-integration][moz.el]] and [[https://github.com/m2ym/popwin-el][popwin-el]].
+   2. Install this package and add it to your load path
+      : (add-to-list 'load-path "/path/to/firefox-controller.el")
+      : (require 'firefox-controller)
 
-** Manual Installation
-   First install [[https://github.com/bard/mozrepl/wiki/Emacs-integration][moz.el]] in Emacs (you can install it via Emacs package systems such as el-get).
+* Intro
+This project started as a fork of [[https://github.com/RenWenshan][Wenshan]]'s [[https://github.com/RenWenshan/emacs-moz-controller][moz-controller]], but I ended up
+rewriting most of the code and chose a quite different way to use it.
 
-   Then install moz-controller:
+In =firefox-controller=, we have two different modes:
+1. =firefox-controller-remote-mode=: This is based on the original
+   =moz-controller=, but the number of available commands increases from 11 to
+   more than 30, and simpler key bindings and a better UI are also provided.
+2. =firefox-controller-direct-mode=: In this mode, you can send the keys
+   directly to firefox.
 
-   ~git clone git@github.com:RenWenshan/emacs-moz-controller.git~
+* =firefox-controller-remote-mode=
+Use =M-x firefox-controller-remote-mode= to enter
+=firefox-controller-remote-mode=. It is called =remote-mode= because the keys
+that you pressed are handled by Emacs and Emacs will send control commands to
+firefox.
 
-   and add the following code in your .emacs or init.el:
+Here is the screeshot when using =firefox-controller-remote-mode=:
+[[./screenshots/remote-mode.png]]
 
-   #+BEGIN_SRC emacs-lisp
-     (add-to-list 'load-path "/path/to/emacs-moz-controller")
-     (require 'moz-controller)
-   #+END_SRC
+As we can see in the screenshot, we have most of the common commands available.
+For example, @@html:<kbd>@@n@@html:</kbd>@@ to scroll down by one page, and
+@@html:<kbd>@@t@@html:</kbd>@@ to open a new tab and switch to it. You can exit
+the =firefox-controller-remote-mode= by @@html:<kbd>@@q@@html:</kbd>@@, and you
+can search the web page by pressing @@html:<kbd>@@s@@html:</kbd>@@, and here is
+the screenshot for the search mode in =firefox-controller-remote-mode= (we are
+search "bibtex" in the current web page):
+[[./screenshots/search-mode.png]]
 
-** Package Installation
-   moz-controller is available on [[https://github.com/milkypostman/melpa][melpa]]:
+* =firefox-controller-direct-mode=
+The limitation of =firefox-controller-remote-mode= is that under that mode, the
+web page is /non-interactive/. We can only view, scroll, switch tab, search and
+open another tab for a new URL. However, if you want to jump to a link or enter
+some text in the input box, these functions are not implemented. I would
+recommend use =firefox-controller-direct-mode=, combined with some powerful
+firefox extensions such as [[https://github.com/mooz/keysnail][KeySnail]] for emacs-like mouseless browsing
+experience, instead of recreating some firefox extensions in
+=firefox-controller-remote-mode=.
 
-   - Make sure you have melpa in the ~package-archives~ list:
+The use of =firefox-controller-direct-mode= is quite straightforward. =M-x
+firefox-controller-direct-mode=, then you can use all the key bindings as if you
+are in firefox instead of Emacs, except for three special key bindings:
+1. @@html:<kbd>@@C-g@@html:</kbd>@@: Whenl you press
+   @@html:<kbd>@@C-g@@html:</kbd>@@ once, the focus of the firefox will move to
+   the content window, and if you press @@html:<kbd>@@C-g@@html:</kbd>@@ twice
+   in a row, it will quit =firefox-controller-direct-mode=.
+2. @@html:<kbd>@@M-g@@html:</kbd>@@: This is bound to
+   =firefox-controller-highlight-focus=, which can show a temporary background
+   color in the current focused element. This command is useful since the
+   foreground application is Emacs, firefox won't show the current focused
+   element(at least, we can't see it in Plasma 5 in Linux, which is my test
+   environment). You can use @@html:<kbd>@@M-g@@html:</kbd>@@ to give you a
+   visual hint about the location of the cursor.
+3. @@html:<kbd>@@C-z@@html:</kbd>@@: This command switches from the current mode
+   to =firefox-controller-remote-mode=.
 
-     #+BEGIN_SRC emacs-lisp
-       (require 'package)
-       (add-to-list 'package-archives
-                    '("melpa" . "http://melpa.milkbox.net/packages/") t)
-       (when (< emacs-major-version 24)
-         ;; For important compatibility libraries like cl-lib
-         (add-to-list 'package-archives '("gnu" . "http://elpa.gnu.org/packages/")))
-       (package-initialize)
-     #+END_SRC
+Here is the screenshot to use =firefox-controller-direct-mode=:
+[[./screenshots/direct-mode.gif]]
 
-   - Press ~M-x package-list-packages~ to get a list of Emacs extensions.
-   - Find ~moz-controller~ and install it from there.
+Explanation: After I invoke =firefox-controller-direct-mode=, I type
+@@html:<kbd>@@C-l@@html:</kbd>@@ to go to the address bar, and use
+@@html:<kbd>@@M-g@@html:</kbd>@@ to highlight my current location(which is the
+address bar of course). Then go to google.com, and use
+@@html:<kbd>@@M-g@@html:</kbd>@@ again to confirm the current focused element in
+firefox is the seach box. After I type and search "emacs", I use KeySnail's
+plugin [[https://github.com/mooz/keysnail/raw/master/plugins/hok.ks.js][hok]] to jump to a link and open it.
 
-* Usage
-  After installation, press ~M-x moz-controller-mode~ to turn on/off moz-controller-mode in the current buffer.
-
-  Press ~M-x moz-controller-global-mode~ to turn on/off moz-controller-global-mode in all buffers, including future buffers.
-
-  To turn on moz-controller-mode globally by default, you can add ~(moz-controller-global-mode t)~ to your .emacs or init.el.
-
-* Define New Commands
-  I have a macro defined in moz-controller: ~defun-moz-controller-command~
-
-  You can use it to define new moz-controller commands, for example:
-
-  #+BEGIN_SRC emacs-lisp
-    (defun-moz-controller-command moz-controller-zoom-in ()
-      "Zoom in."
-      (concat "gBrowser.selectedBrowser.markupDocumentViewer.fullZoom += "
-              (number-to-string moz-controller-zoom-step) ";")
-      )
-  #+END_SRC
-
-  Where moz-controller-zoom-in is the function name, "Zoom in." is the docstring, (concat ...) is the command (in string format) you want *MozRepl* to execute.
-
-* Thanks
-  - average on #emacs IRC
-  - Chen Bin (https://github.com/redguardtoo)
-  - Steve Purcell (https://github.com/purcell)
-
-* License
-  See the LICENSE file.
-
-* Copyright
-  (C) 2014 任文山 (Ren Wenshan) All rights reserved.
-  renws1990 at gmail.com
-
-* Contributors
-  - Steve Purcell (https://github.com/purcell)
+* Acknowledgment
+  - [[https://github.com/RenWenshan/][RenWenshan]] for the original [[https://github.com/RenWenshan/emacs-moz-controller][moz-controller]].
