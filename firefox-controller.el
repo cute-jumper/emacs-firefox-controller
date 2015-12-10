@@ -125,11 +125,11 @@
 ;;   mode, the web page is /non-interactive/. We can only view, scroll,
 ;;   switch tab, search and open another tab for a new URL. However, if you
 ;;   want to jump to a link or enter some text in the input box, these
-;;   functions are not implemented. I would recommend use
-;;   `firefox-controller-direct-mode', combined with some powerful firefox
-;;   extensions such as [KeySnail] for emacs-like mouseless browsing
-;;   experience, instead of recreating some firefox extensions in
-;;   `firefox-controller-remote-mode'.
+;;   functions are not implemented. Here comes
+;;   `firefox-controller-direct-mode', which can be combined with some
+;;   powerful firefox extensions such as [KeySnail] to build emacs-like
+;;   mouseless browsing experience for firefox. We don't have to recreate
+;;   some firefox extensions in `firefox-controller-remote-mode'.
 
 ;;   The use of `firefox-controller-direct-mode' is quite straightforward.
 ;;   `M-x firefox-controller-direct-mode', then you can use all the key
