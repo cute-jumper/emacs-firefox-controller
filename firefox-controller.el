@@ -6,7 +6,7 @@
 ;; Author: Junpeng Qiu <qjpchmail@gmail.com>, 任文山 (Ren Wenshan)
 ;; URL: https://github.com/cute-jumper/emacs-firefox-controller
 ;; Version: 0.1
-;; Package-Requires: ((moz "0") (popwin "1.0.0"))
+;; Package-Requires: ((moz "0") (popwin "1.0.0") (cl-lib "0.5"))
 ;; Keywords: extensions
 
 ;; This program is free software; you can redistribute it and/or modify
@@ -180,6 +180,7 @@
 
 (require 'moz)
 (require 'popwin)
+(require 'cl-lib)
 (require 'font-lock)
 
 (defgroup firefox-controller nil
@@ -474,7 +475,7 @@
     (firefox-controller--send
      (format
       "gBrowser.selectTabAtIndex(%s);"
-      (position selected-title tab-titles :test 'equal)))))
+      (cl-position selected-title tab-titles :test 'equal)))))
 
 (firefox-controller-remote-defun firefox-controller-switch-tab-by-id
   "Switch the tab by id."
@@ -488,7 +489,7 @@ Array.prototype.slice.call(gBrowser.tabs).map(function(tab){tab.label=\"[\" + (i
     "Array.prototype.map.call(gBrowser.tabs,\
 function(tab){tab.label=tab.label.replace(/\[[0-9]+\]/, '');});\
 gBrowser.selectTabAtIndex(%d);"
-    (string-to-int
+    (string-to-number
      (firefox-controller--safe-read-string "Tab id: "
                                            (lambda ()
                                              (firefox-controller--send
