@@ -50,11 +50,10 @@ experience for firefox. We don't have to recreate some firefox extensions in
 
 The use of =firefox-controller-direct-mode= is quite straightforward. =M-x
 firefox-controller-direct-mode=, then you can use all the key bindings as if you
-are in firefox instead of Emacs, except for three special key bindings:
-1. @@html:<kbd>@@C-g@@html:</kbd>@@: When you press
-   @@html:<kbd>@@C-g@@html:</kbd>@@ once, the focus of the firefox will move to
-   the content window, and if you press @@html:<kbd>@@C-g@@html:</kbd>@@ twice
-   in a row, it will quit =firefox-controller-direct-mode=.
+are in firefox instead of Emacs, except for four special key bindings:
+1. @@html:<kbd>@@C-M-g@@html:</kbd>@@: Move the current focus to the content
+   window. This is useful when you want to move out of the address bar or search
+   bar to perform some page navigation(scroll up/down, open some link, etc.).
 2. @@html:<kbd>@@M-g@@html:</kbd>@@: This is bound to
    =firefox-controller-highlight-focus=, which can show a temporary background
    color in the current focused element. This command is useful since the
@@ -64,6 +63,7 @@ are in firefox instead of Emacs, except for three special key bindings:
    visual hint about the location of the cursor.
 3. @@html:<kbd>@@C-z@@html:</kbd>@@: This command switches from the current mode
    to =firefox-controller-remote-mode=.
+4. @@html:<kbd>@@C-g@@html:</kbd>@@: Exit =firefox-controller-direct-mode=.
 
 Here is the screenshot to use =firefox-controller-direct-mode=:
 [[./screenshots/direct-mode.gif]]

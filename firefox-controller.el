@@ -134,20 +134,20 @@
 
 ;;   The use of `firefox-controller-direct-mode' is quite straightforward.
 ;;   `M-x firefox-controller-direct-mode', then you can use all the key
-;;   bindings as if you are in firefox instead of Emacs, except for three
+;;   bindings as if you are in firefox instead of Emacs, except for four
 ;;   special key bindings:
-;;   1. C-g: Whenl you press C-g once, the focus of the firefox will move
-;;      to the content window, and if you press C-g twice in a row, it will
-;;      quit `firefox-controller-direct-mode'.
-;;   2. M-g: This is bound to `firefox-controller-highlight-focus', which
-;;      can show a temporary background color in the current focused
-;;      element. This command is useful since the foreground application is
-;;      Emacs, firefox won't show the current focused element(at least, we
-;;      can't see it in Plasma 5 in Linux, which is my test environment).
-;;      You can use M-g to give you a visual hint about the location of the
-;;      cursor.
+;;   1. C-M-g: Move the current focus to the content window. This is useful
+;;      when you want to move out of the address bar or search bar to perform
+;;      some page navigation(scroll up/down, open some link, etc.).
+;;   2. M-g: This is bound to `firefox-controller-highlight-focus', which can
+;;      show a temporary background color in the current focused element.
+;;      This command is useful since the foreground application is Emacs,
+;;      firefox won't show the current focused element(at least, we can't see
+;;      it in Plasma 5 in Linux, which is my test environment). You can use
+;;      M-g to give you a visual hint about the location of the cursor.
 ;;   3. C-z: This command switches from the current mode to
 ;;      `firefox-controller-remote-mode'.
+;;   4. C-g: Exit `firefox-controller-direct-mode'.
 
 ;;   Here is the screenshot to use `firefox-controller-direct-mode':
 ;;   [https://github.com/cute-jumper/ace-pinyin/blob/master/screenshots/direct-mode.gif]
@@ -304,14 +304,15 @@
 ;; ------------------ ;;
 ;; direct-mode keymap ;;
 ;; ------------------ ;;
-(defvar firefox-controller-direct-mode-keymap-alist
+(defvar firefox-controller--direct-mode-keymap-alist
   '(("special key bindings" .
-     ((firefox-controller-direct-mode-focus-or-quit "C-g" "focus(once), quit(twice)")
-      (firefox-controller-highlight-focus "M-g" "highlight focus")
-      (firefox-controller-switch-to-remote-mode "C-z" "switch to firefox-controller-remote-mode")))))
+     ((firefox-controller-highlight-focus "M-g" "highlight focus")
+      (firefox-controller-direct-mode-focus-content "C-M-g" "focus content")
+      (firefox-controller-switch-to-remote-mode "C-z" "switch to firefox-controller-remote-mode")
+      (firefox-controller-direct-mode-quit "C-g" "quit")))))
 
 (defvar firefox-controller-direct-mode-map
-  (let ((map (firefox-controller--make-keymap firefox-controller-direct-mode-keymap-alist)))
+  (let ((map (firefox-controller--make-keymap firefox-controller--direct-mode-keymap-alist)))
     (define-key map [t] #'firefox-controller-direct-mode-send-key)
     map)
   "Keymap of `firefox-controller-direct-mode'.")
@@ -753,7 +754,7 @@ target.dispatchEvent(evt);\
 ;; ---------------- ;;
 (defun firefox-controller--direct-mode-show-help ()
   (firefox-controller--show-help-from-keymap-alist
-   firefox-controller-direct-mode-keymap-alist
+   firefox-controller--direct-mode-keymap-alist
    3))
 
 ;; -------------------------------------------- ;;
@@ -782,33 +783,34 @@ target.dispatchEvent(evt);\
 var originalColor=document.commandDispatcher.focusedElement.style.backgroundColor;\
 document.commandDispatcher.focusedElement.style.backgroundColor='%s';\
 setTimeout(function(){document.commandDispatcher.focusedElement.style.backgroundColor=originalColor;},1000);\
-}})();" firefox-controller-highlight-focus-background)))
+}})();" firefox-controller-highlight-focus-background))
+  (message "Highlight the current focused element."))
 
-(defun firefox-controller-direct-mode-focus-or-quit (&optional quitp)
-  (interactive "P")
-  (if (or quitp (eq last-command 'firefox-controller-direct-mode-focus-or-quit))
-      (progn
-        (remove-hook 'mouse-leave-buffer-hook #'firefox-controller-direct-mode-focus-or-quit)
-        (remove-hook 'kbd-macro-termination-hook #'firefox-controller-direct-mode-focus-or-quit)
-        (setq overriding-local-map firefox-controller--overriding-keymap)
-        (setq firefox-controller--overriding-keymap)
-        (message "Exit firefox-controller-direct-mode.")
-        (firefox-controller--hide-current-help))
-    (firefox-controller--send "content.window.focus();")
-    (message "Move focus to content window.  \
-Press C-g again to exit firefox-controller-direct-mode.")))
+(defun firefox-controller-direct-mode-focus-content ()
+  (interactive)
+  (firefox-controller--send "content.window.focus();")
+  (message "Move focus to content window."))
+
+(defun firefox-controller-direct-mode-quit ()
+  (interactive)
+  (remove-hook 'mouse-leave-buffer-hook #'firefox-controller-direct-mode-quit)
+  (remove-hook 'kbd-macro-termination-hook #'firefox-controller-direct-mode-quit)
+  (setq overriding-local-map firefox-controller--overriding-keymap)
+  (setq firefox-controller--overriding-keymap)
+  (message "Exit firefox-controller-direct-mode.")
+  (firefox-controller--hide-current-help))
 
 (defun firefox-controller-switch-to-remote-mode ()
   (interactive)
-  (firefox-controller-direct-mode-focus-or-quit t)
+  (firefox-controller-direct-mode-quit)
   (firefox-controller-remote-mode))
 
 ;;;###autoload
 (defun firefox-controller-direct-mode ()
   "Enter `firefox-controller-direct-mode'."
   (interactive)
-  (add-hook 'mouse-leave-buffer-hook #'firefox-controller-direct-mode-focus-or-quit)
-  (add-hook 'kbd-macro-termination-hook #'firefox-controller-direct-mode-focus-or-quit)
+  (add-hook 'mouse-leave-buffer-hook #'firefox-controller-direct-mode-quit)
+  (add-hook 'kbd-macro-termination-hook #'firefox-controller-direct-mode-quit)
   (setq firefox-controller--overriding-keymap overriding-local-map)
   (setq overriding-local-map firefox-controller-direct-mode-map)
   (message "Enter firefox-controller-direct-mode.")
