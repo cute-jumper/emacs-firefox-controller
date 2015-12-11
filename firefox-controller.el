@@ -156,7 +156,7 @@
 ;;   C-l to go to the address bar, and use M-g to highlight my current
 ;;   location(which is the address bar of course). Then go to google.com,
 ;;   and use M-g again to confirm the current focused element in firefox is
-;;   the seach box. After I type and search "emacs", I use KeySnail's
+;;   the search box. After I type and search "emacs", I use KeySnail's
 ;;   plugin [hok] to jump to a link and open it.
 
 
