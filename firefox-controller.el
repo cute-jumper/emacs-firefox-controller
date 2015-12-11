@@ -113,11 +113,22 @@
 ;;   As we can see in the screenshot, we have defined most of the commonly used
 ;;   commands in firefox. For example, n to scroll down by one page, and t to
 ;;   open a new tab and switch to it. You can exit the
-;;   `firefox-controller-remote-mode' by q, and you can search the web page by
-;;   pressing s, and here is the screenshot for the search mode in
-;;   `firefox-controller-remote-mode' (we are searching "bibtex" in the current
-;;   web page):
-;;   [https://github.com/cute-jumper/ace-pinyin/blob/master/screenshots/search-mode.png]
+;;   `firefox-controller-remote-mode' by q.
+
+;;   To search the web page, press s. Here is the screenshot for the search
+;;   mode in `firefox-controller-remote-mode' (we are searching "bibtex" in
+;;   the current web page): [./screenshots/search-mode.png]
+
+;;   However, you don't necessarily need to call
+;;   `firefox-controller-remote-mode' to use these commands. You can bind
+;;   your own key to a specific command. Look at the
+;;   `firefox-controller--remote-mode-keymap-alist' variable to find out the
+;;   commands that can be bound to. For example, you can use C-c m L to copy
+;;   the current tab' URL by:
+;;   ,----
+;;   | (global-set-key (kbd "C-c m L")
+;;   |                 #'firefox-controller-get-current-url)
+;;   `----
 
 
 ;; 4 `firefox-controller-direct-mode'

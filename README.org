@@ -33,10 +33,21 @@ As we can see in the screenshot, we have defined most of the commonly used
 commands in firefox. For example, @@html:<kbd>@@n@@html:</kbd>@@ to scroll down
 by one page, and @@html:<kbd>@@t@@html:</kbd>@@ to open a new tab and switch to
 it. You can exit the =firefox-controller-remote-mode= by
-@@html:<kbd>@@q@@html:</kbd>@@, and you can search the web page by pressing
-@@html:<kbd>@@s@@html:</kbd>@@, and here is the screenshot for the search mode
-in =firefox-controller-remote-mode= (we are searching "bibtex" in the current
-web page): [[./screenshots/search-mode.png]]
+@@html:<kbd>@@q@@html:</kbd>@@.
+
+To search the web page, press @@html:<kbd>@@s@@html:</kbd>@@. Here is the
+screenshot for the search mode in =firefox-controller-remote-mode= (we are
+searching "bibtex" in the current web page): [[./screenshots/search-mode.png]]
+
+However, you don't necessarily need to call =firefox-controller-remote-mode= to
+use these commands. You can bind your own key to a specific command. Look at the
+=firefox-controller--remote-mode-keymap-alist= variable to find out the commands
+that can be bound to. For example, you can use @@html:<kbd>@@C-c m
+L@@html:</kbd>@@ to copy the current tab' URL by:
+#+BEGIN_SRC elisp
+(global-set-key (kbd "C-c m L")
+                #'firefox-controller-get-current-url)
+#+END_SRC
 
 * =firefox-controller-direct-mode=
 The limitation of =firefox-controller-remote-mode= is that under that mode, the
