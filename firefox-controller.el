@@ -1,4 +1,4 @@
-;;; firefox-controller.el --- An improved Firefox controller for Emacs
+;;; firefox-controller.el --- An improved Firefox controller
 
 ;; Copyright (C) 2015 Junpeng Qiu
 ;; Copyright (C) 2014 任文山 (Ren Wenshan)
