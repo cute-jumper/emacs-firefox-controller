@@ -720,8 +720,8 @@ gBrowser.selectTabAtIndex(%d);"
     (print . "PRINTSCREEN")))
 
 (defvar firefox-controller--generate-key-function-string
-  "if (typeof(mozControllerGenerateKey) == 'undefined'){\
-function mozControllerGenerateKey(target,isCtrl,isAlt,isShift,keycode,charcode){\
+  "if (typeof(firefoxControllerGenerateKey) == 'undefined'){\
+function firefoxControllerGenerateKey(target,isCtrl,isAlt,isShift,keycode,charcode){\
 if (target==gURLBar.inputField && keycode == KeyEvent.DOM_VK_RETURN) {gBrowser.loadURI(target.value); content.window.focus(); return;}\
 else if (target == BrowserSearch.searchBar.textbox.inputField && keycode == KeyEvent.DOM_VK_RETURN) { BrowserSearch.searchBar.doSearch(target.value,'tab'); return;}\
 var evt=document.createEvent('KeyboardEvent');\
@@ -740,7 +740,7 @@ target.dispatchEvent(evt);\
 
 (defun firefox-controller--direct-send-key (charcode &optional ctrlp altp shiftp keycode target)
   (firefox-controller--send firefox-controller--generate-key-function-string)
-  (firefox-controller--send (format "mozControllerGenerateKey(%s,%s,%s,%s,%s,%s);"
+  (firefox-controller--send (format "firefoxControllerGenerateKey(%s,%s,%s,%s,%s,%s);"
                                     (or target "document.commandDispatcher.focusedElement || document")
                                     (firefox-controller--e2j ctrlp)
                                     (firefox-controller--e2j altp)
