@@ -42,8 +42,9 @@
 ;; 2 Intro
 ;; 3 `firefox-controller-remote-mode'
 ;; 4 `firefox-controller-direct-mode'
-;; 5 Customization
-;; 6 Acknowledgment
+;; 5 Define Your Own Key Sequences to Be Sent
+;; 6 Customization
+;; 7 Acknowledgment
 
 
 
@@ -165,7 +166,27 @@
 ;;   [hok] https://github.com/mooz/keysnail/raw/master/plugins/hok.ks.js
 
 
-;; 5 Customization
+;; 5 Define Your Own Key Sequences to Be Sent
+;; ==========================================
+
+;;   You can use `firefox-controller-send-key-sequence' function to define
+;;   your own key sequences which can be sent directly to firefox.
+
+;;   For example, we define C-c m g to open a new tab and go to
+;;   www.google.com:
+;;   ,----
+;;   | (global-set-key (kbd "C-c m g")
+;;   |                 (lambda ()
+;;   |                   (interactive)
+;;   |                   (firefox-controller-send-key-sequence
+;;   |                    "C-t C-l www.google.com <return>")))
+;;   `----
+
+;;   Make sure your key sequence can be read by the `kbd' function.
+
+
+
+;; 6 Customization
 ;; ===============
 
 ;;   - `firefox-controller-zoom-step': Zoom step. Default value is 0.1.
@@ -174,7 +195,7 @@
 ;;      value is "yellow".
 
 
-;; 6 Acknowledgment
+;; 7 Acknowledgment
 ;; ================
 
 ;;   - [RenWenshan] for the original [moz-controller].
@@ -760,9 +781,9 @@ target.dispatchEvent(evt);\
 ;; -------------------------------------------- ;;
 ;; Commands in `firefox-controller-direct-mode' ;;
 ;; -------------------------------------------- ;;
-(defun firefox-controller-direct-mode-send-key ()
+(defun firefox-controller-direct-mode-send-key (&optional key-event)
   (interactive)
-  (let* ((evt last-input-event)
+  (let* ((evt (or key-event last-input-event))
          (mods (event-modifiers evt))
          (c (event-basic-type evt)))
     (message (concat "Key sent: "
@@ -825,7 +846,14 @@ setTimeout(function(){document.commandDispatcher.focusedElement.style.background
 ;; b=a[i].style.backgroundColor;\
 ;; a[i].style.backgroundColor='yellow';\
 ;; a[i].focus();")
-;;   (firefox-controller--send (format "a[i].value='%s';" (read-string "Input: "))))
+;;   (firefox-controller--send (format "a[i].value='%s';" (read-string "Input:
+;; "))))
+
+;;;###autoload
+(defun firefox-controller-send-key-sequence (key-seq-str)
+  "Send keys specified by KEY-SEQ-STR to firefox."
+  (mapcar #'firefox-controller-direct-mode-send-key
+          (read-kbd-macro key-seq-str t)))
 
 (provide 'firefox-controller)
 ;;; firefox-controller.el ends here

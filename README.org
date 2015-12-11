@@ -76,6 +76,22 @@ address bar of course). Then go to google.com, and use
 firefox is the search box. After I type and search "emacs", I use KeySnail's
 plugin [[https://github.com/mooz/keysnail/raw/master/plugins/hok.ks.js][hok]] to jump to a link and open it.
 
+* Define Your Own Key Sequences to Be Sent
+  You can use =firefox-controller-send-key-sequence= function to define your
+  own key sequences which can be sent directly to firefox.
+
+  For example, we define @@html:<kbd>@@C-c m g@@html:</kbd>@@ to open a new tab
+  and go to www.google.com:
+  #+BEGIN_SRC elisp
+  (global-set-key (kbd "C-c m g")
+                  (lambda ()
+                    (interactive)
+                    (firefox-controller-send-key-sequence
+                     "C-t C-l www.google.com <return>")))
+  #+END_SRC
+
+   Make sure your key sequence can be read by the =kbd= function.
+
 * Customization
   - =firefox-controller-zoom-step=: Zoom step. Default value is 0.1.
   - =firefox-controller-highlight-focus-background=: The background color used by
