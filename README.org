@@ -4,6 +4,10 @@
 ** Firefox Extension
    Install [[https://addons.mozilla.org/en-US/firefox/addon/mozrepl/][MozRepl]] in Firefox.
 ** Emacs Extensions
+   This package is now on [[http://melpa.org/][melpa]]. You can install directly from [[http://melpa.org/][melpa]] using
+   =package.el=.
+
+   Or use the following steps to install manually:
    1. Install [[https://github.com/bard/mozrepl/wiki/Emacs-integration][moz.el]] and [[https://github.com/m2ym/popwin-el][popwin-el]].
    2. Install this package and add it to your load path
       : (add-to-list 'load-path "/path/to/firefox-controller.el")

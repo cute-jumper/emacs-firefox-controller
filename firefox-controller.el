@@ -65,13 +65,18 @@
 ;; 1.2 Emacs Extensions
 ;; ~~~~~~~~~~~~~~~~~~~~
 
+;;   This package is now on [melpa]. You can install directly from [melpa]
+;;   using `package.el'.
+
+;;   Or use the following steps to install manually:
 ;;   1. Install [moz.el] and [popwin-el].
 ;;   2. Install this package and add it to your load path
 ;;      ,----
-;;      | (add-to-list 'load-path "/path/to/emacs-firefox-controller")
+;;      | (add-to-list 'load-path "/path/to/firefox-controller.el")
 ;;      | (require 'firefox-controller)
 ;;      `----
 
+;;   [melpa] http://melpa.org/
 
 ;;   [moz.el] https://github.com/bard/mozrepl/wiki/Emacs-integration
 
