@@ -761,7 +761,7 @@ gBrowser.selectTabAtIndex(%d);"
   "if (typeof(firefoxControllerGenerateKey) == 'undefined'){\
 function firefoxControllerGenerateKey(target,isCtrl,isAlt,isShift,keycode,charcode){\
 if (target==gURLBar.inputField && keycode == KeyEvent.DOM_VK_RETURN) {gBrowser.loadURI(target.value); content.window.focus(); return;}\
-else if (target == BrowserSearch.searchBar.textbox.inputField && keycode == KeyEvent.DOM_VK_RETURN) { BrowserSearch.searchBar.doSearch(target.value,'tab'); return;}\
+else if (BrowserSearch.searchBar != null && target == BrowserSearch.searchBar.textbox.inputField && keycode == KeyEvent.DOM_VK_RETURN) { BrowserSearch.searchBar.doSearch(target.value,'tab'); return;}\
 var evt=document.createEvent('KeyboardEvent');\
 evt.initKeyEvent('keypress',true,true,null,isCtrl,isAlt,isShift,false,keycode,charcode);\
 target.dispatchEvent(evt);\
