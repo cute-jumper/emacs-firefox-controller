@@ -383,6 +383,7 @@
         (index 0)
         (line-count 0)
         (separator (propertize "→" 'face font-lock-builtin-face))
+        (t-key-str "any other key")
         first-column-max-widths
         second-column-max-widths)
     (dolist (module keymap-alist)
@@ -397,7 +398,7 @@
                (curr-val-2 (nth idx second-column-max-widths)))
           (setf (nth idx first-column-max-widths)
                 (max curr-val-1 (length (if (vectorp (nth 1 lst))
-                                            "any other key"
+                                            t-key-str
                                           (nth 1 lst)))))
           (setf (nth idx second-column-max-widths)
                 (max curr-val-2 (length (nth 2 lst))))
@@ -415,7 +416,7 @@
                               (format "%%%ds %%s %%-%ds"
                                       (nth idx first-column-max-widths)
                                       (nth idx second-column-max-widths))
-                              (propertize (if (vectorp key) "any other key" key)
+                              (propertize (if (vectorp key) t-key-str key)
                                           'face font-lock-keyword-face)
                               separator
                               (propertize (nth 2 lst) 'face font-lock-function-name-face))))
