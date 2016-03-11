@@ -1,4 +1,5 @@
 #+TITLE: firefox-controller: An Improved Firefox Controller for Emacs!
+[[http://melpa.org/#/firefox-controller][file:http://melpa.org/packages/firefox-controller-badge.svg]]
 
 * Installation
 ** Firefox Extension
