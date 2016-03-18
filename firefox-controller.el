@@ -499,7 +499,7 @@
                    ,@filter-body)
                (with-current-buffer (process-buffer (inferior-moz-process))
                  (remove-hook 'comint-output-filter-functions #',filter-name))
-               (setq firefox-controller--remote-command-type))))))))
+               (setq firefox-controller--remote-command-type nil))))))))
 
 ;; ---------------------------- ;;
 ;; Various remote-mode commands ;;
@@ -724,7 +724,7 @@ gBrowser.selectTabAtIndex(%d);"
   (remove-hook 'mouse-leave-buffer-hook #'firefox-controller-remote-mode-quit)
   (remove-hook 'kbd-macro-termination-hook #'firefox-controller-remote-mode-quit)
   (setq overriding-local-map firefox-controller--overriding-keymap)
-  (setq firefox-controller--overriding-keymap)
+  (setq firefox-controller--overriding-keymap nil)
   (firefox-controller--hide-current-help)
   (message "Exit firefox-controller-remote-mode."))
 
@@ -834,7 +834,7 @@ setTimeout(function(){document.commandDispatcher.focusedElement.style.background
   (remove-hook 'mouse-leave-buffer-hook #'firefox-controller-direct-mode-quit)
   (remove-hook 'kbd-macro-termination-hook #'firefox-controller-direct-mode-quit)
   (setq overriding-local-map firefox-controller--overriding-keymap)
-  (setq firefox-controller--overriding-keymap)
+  (setq firefox-controller--overriding-keymap nil)
   (message "Exit firefox-controller-direct-mode.")
   (firefox-controller--hide-current-help))
 
