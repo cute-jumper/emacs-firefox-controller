@@ -331,10 +331,16 @@
       (firefox-controller-switch-to-direct-mode "C-z" "switch to firefox-controller-direct-mode")
       (firefox-controller-remote-mode-quit "q" "quit")))))
 
+(defun firefox-controller-remote-undefined ()
+  (interactive)
+  (message "Undefined key: %s" (key-description (this-command-keys))))
+
 (defvar firefox-controller-remote-mode-map
   (let ((map (firefox-controller--make-keymap
               firefox-controller--remote-mode-keymap-alist)))
-    (define-key map [t] (lambda () (interactive) (message "Undefined.")))
+    (define-key map [t] #'firefox-controller-remote-undefined)
+    ;; undefine all other M-* key bindings
+    (define-key (lookup-key map [27]) [t] #'firefox-controller-remote-undefined)
     map)
   "Keymap of `firefox-controller-remote-mode'.")
 
@@ -351,6 +357,8 @@
 (defvar firefox-controller-direct-mode-map
   (let ((map (firefox-controller--make-keymap firefox-controller--direct-mode-keymap-alist)))
     (define-key map [t] #'firefox-controller-direct-mode-send-key)
+    ;; undefine all other M-* key bindings
+    (define-key (lookup-key map [27]) [t] #'firefox-controller-direct-mode-send-key)
     map)
   "Keymap of `firefox-controller-direct-mode'.")
 
