@@ -812,8 +812,7 @@ target.dispatchEvent(evt);\
          (mods (event-modifiers evt))
          (c (event-basic-type evt)))
     (message (concat "Key sent: "
-                     (if mods (format "%s " mods) "")
-                     (format (if (characterp c) "%c" "%s") c)))
+                     (key-description (this-command-keys))))
     (firefox-controller--direct-send-key (if (characterp c) c 0)
                                          (and (member 'control mods) t)
                                          (and (member 'meta mods) t)
